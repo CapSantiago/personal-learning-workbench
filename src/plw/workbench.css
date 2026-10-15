@@ -1,0 +1,45 @@
+/* Local, system-font UI. Streamlit primitives keep their native keyboard behavior. */
+:root { --plw-ink:#243b35; --plw-muted:#64756f; --plw-accent:#25665c; }
+[data-testid="stAppViewContainer"] {background:#f6f8f6;color:var(--plw-ink);}
+[data-testid="stMainBlockContainer"] {max-width:1240px;padding:2rem 2.5rem 4rem;}
+[data-testid="stHeader"] {background:transparent;}
+[data-testid="stSidebar"] {background:#edf2ee;border-right:1px solid #dce5de;}
+[data-testid="stSidebarContent"] {padding-top:1.5rem;}
+[data-testid="stSidebar"] [data-testid="stButton"] button {justify-content:flex-start;border-radius:9px;min-height:42px;}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"] {background:transparent;border-color:transparent;}
+[data-testid="stSidebar"] [data-testid="stButton"] button:hover {background:#dfe9e2;}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] {background:#25665c;border-color:#25665c;color:white;}
+.st-key-sidebar_course_list {margin:0 0 .5rem .75rem;padding-left:.65rem;border-left:2px solid #d1e0d7;}
+[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button {min-height:36px;text-align:left;}
+[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button[kind="primary"] {background:#dbeae2;border-color:transparent;color:#205c51;font-weight:600;}
+h1,h2,h3 {letter-spacing:-.025em;color:var(--plw-ink);}
+h2 {font-size:1.65rem!important;} h3 {font-size:1.12rem!important;}
+[data-testid="stCaptionContainer"],[data-testid="stCaptionContainer"] p {color:var(--plw-muted);}
+[data-testid="stVerticalBlockBorderWrapper"]>div {border-color:#e0e7e2!important;border-radius:13px!important;}
+[data-testid="stForm"],[data-testid="stExpander"] {background:white;border-color:#e0e7e2;border-radius:12px;}
+[data-testid="stMetric"] {background:white;border:1px solid #e0e7e2;border-radius:12px;padding:14px 18px;}
+[data-testid="stMetricValue"] {font-size:1.6rem;}
+[data-testid="stButton"] button,[data-testid="stFormSubmitButton"] button {border-radius:8px;}
+.plw-brand {font-size:1.7rem;font-weight:750;letter-spacing:.05em;color:#25665c;margin-bottom:0;}
+.plw-brand-sub {font-size:.84rem;color:#63766b;margin:0 0 1.5rem;}
+.plw-eyebrow {font-size:.78rem;color:#73877b;letter-spacing:.06em;margin:0 0 .15rem;}
+.plw-empty {padding:1.2rem 0;color:#64756f;}
+.plw-task-list {list-style:none;margin:0;padding:0;display:grid;gap:8px;}
+[data-testid="stHtml"] ol.plw-task-list {margin:0;padding:0;}
+.plw-task-row {display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:14px 16px;background:white;border:1px solid #e0e7e2;border-radius:10px;}
+.plw-task-title {font-weight:600;overflow-wrap:anywhere;line-height:1.5;}
+.plw-task-course {color:#64756f;font-size:.82rem;margin-top:3px;overflow-wrap:anywhere;}
+.plw-task-due {display:flex;align-items:flex-end;flex-direction:column;gap:5px;color:#53675e;font-size:.8rem;}
+.plw-task-priority,.plw-task-overdue {border-radius:5px;padding:3px 8px;font-size:.76rem;white-space:nowrap;}
+.plw-task-priority {background:#edf2ee;color:#53675e;}
+.plw-task-priority.is-important {background:#fff0cb;color:#805300;font-weight:600;}
+.plw-task-row.is-overdue {background:#fff4f2;border-color:#d6aaa3;border-left:4px solid #893b32;}
+.plw-task-row.is-overdue .plw-task-title,.plw-task-row.is-overdue .plw-task-due {color:#782d25;}
+.plw-task-overdue {background:#893b32;color:white;font-weight:600;}
+[class*="st-key-pending_task_"] {background:white;}
+[class*="st-key-pending_task_"] .plw-task-row {padding:0;border:0;background:transparent;}
+[class*="st-key-pending_task_"]:has(.is-overdue) {background:#fff4f2;border-color:#d6aaa3!important;border-left:4px solid #893b32!important;}
+@media(max-width:600px){.plw-task-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:12px;}.plw-task-main{grid-column:1;grid-row:1;}.plw-task-priority{grid-column:2;grid-row:1;}.plw-task-due{grid-column:1 / -1;flex-direction:row;align-items:center;flex-wrap:wrap;}}
+[data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p {font-size:0;}
+[data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p::after {content:"选择文件";font-size:14px;}
+@media(max-width:850px){[data-testid="stMainBlockContainer"]{padding:3rem 1rem;}h2{font-size:1.4rem!important;}}

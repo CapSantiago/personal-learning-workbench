@@ -1,0 +1,38 @@
+name: plw
+services:
+  plw:
+    image: ${PLW_IMAGE:-plw:0.3.1}
+    build: .
+    # Linux host only. Tailscale Serve proxies 127.0.0.1:8501; no published port.
+    network_mode: host
+    restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    environment:
+      HOME: /tmp
+    volumes:
+      - type: bind
+        source: ${PLW_DATA_DIR:?Set an absolute isolated cloud data directory}
+        target: /var/lib/plw/data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PLW_BACKUP_DIR:?Set an absolute cloud backup directory}
+        target: /var/lib/plw/backups
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PLW_CONFIG_DIR:?Set the private account directory}
+        target: /run/plw-private
+        read_only: true
+        bind:
+          create_host_path: false
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"

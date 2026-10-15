@@ -1,0 +1,3 @@
+# Windows/Linux private-site dependencies. Linux/arm64 binary-wheel build is required.
+-r requirements.lock.txt
+pypdf==6.10.0

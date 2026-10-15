@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf
+# Applied migration checksums and vendored manifest hashes must survive checkout.
+src/plw/migrations/*.sql -text
+assets/pdfjs/** -text

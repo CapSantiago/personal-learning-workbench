@@ -1,0 +1,11 @@
+.reader-root { font-family:system-ui,'Microsoft YaHei',sans-serif; }
+.tools {display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 0;}
+.tools button,.tools select {padding:7px 12px;border:1px solid #b8c5d2;border-radius:7px;background:#fff;color:#172e43;cursor:pointer;}
+.tools button[aria-pressed=true] {background:#ddefff;border-color:#3685bf;}
+.read-status {font-size:14px;color:#406076;margin-left:12px;}
+.read-status.error {color:#b3261e;}
+.page-scroll {height:660px;overflow:auto;background:#e5eaf0;border-radius:10px;padding:20px;}
+.paper {position:relative;margin:auto;box-shadow:0 2px 12px #273d5029;background:white;}
+.paper canvas {display:block;}
+.paper .marks {position:absolute;left:0;top:0;touch-action:none;}
+.read-meta {font-size:13px;color:#526779;margin:8px 0;}

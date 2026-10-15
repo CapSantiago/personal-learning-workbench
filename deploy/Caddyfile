@@ -1,0 +1,17 @@
+# Set PLW_DOMAIN to the chosen hostname and PLW_PORT to the loopback app port.
+# Never expose PLW_PORT through the server firewall. Do not add a file_server.
+{$PLW_DOMAIN} {
+    request_body {
+        max_size 210MB
+    }
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+        -Server
+    }
+    reverse_proxy 127.0.0.1:{$PLW_PORT:8501} {
+        header_up Host {host}
+        header_up X-Forwarded-Proto https
+        header_up -Forwarded
+    }
+}
