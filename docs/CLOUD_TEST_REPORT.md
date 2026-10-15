@@ -25,3 +25,7 @@
 运行日志与JSON：`.sandbox/cloud-implementation/`。浏览器报告：合成根下`evidence/private-site-browser.json`、`cloud-backup-browser.json`；包含原生下载ZIP与截图。损坏/失败测试残留只在沙盒保留，不自动清理。
 
 首轮全量发现2项历史测试把最新迁移固定成003；已将“当前最新”断言改为实际最新，并让“003故意失败”继续只针对001–003。新增004故意失败测试后全量通过。未将失败或未执行项目记作通过。
+
+## GitHub发布续轮
+
+同日已创建并确认CapSantiago/personal-learning-workbench为私有仓库，首次推送b9bd36d。357文件提交范围审查通过；211个迁移和PDF.js文件在暂存区与远程新克隆中字节一致。新克隆独立运行部署配置预检通过，未创建学习库。此轮没有改应用逻辑，未重复运行579项测试，也未运行Linux容器。没有启用GitHub Actions或收费服务。

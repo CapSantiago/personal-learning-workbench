@@ -7,7 +7,7 @@
 - **M1已完成**：检查项目结构、运行入口、Windows依赖、配置、路径、数据库、上传、登录、阅读、备份与现有测试。首次审计时无Git；后续已初始化main，并确认创建CapSantiago/personal-learning-workbench私有仓库。Docker27.5.1客户端存在但引擎未运行，WSL没有发行版。
 - **M2代码准备与Windows验收已完成；Linux容器验收未完成**。用户明确选择先完成代码与Windows测试，容器测试留待环境就绪；没有安装Docker/WSL或修改系统。
 - M3已准备Tailscale部署步骤、完整ZIP备份下载与迁移维护命令；没有创建云实例、配置真实Tailscale或迁移正式学习资料。
-- M4已准备轻量更新与Compose包装脚本、忽略规则、GitHub流程。已初始化本地仓库、验证GitHub账号并创建指定私有仓库，正在准备首次源码推送；云端更新/失败回退未实际运行。
+- M4代码托管已完成：已初始化本地main，验证账号并创建[CapSantiago/personal-learning-workbench私有仓库](https://github.com/CapSantiago/personal-learning-workbench)，首次提交`b9bd36d`已推送。云端更新/失败回退未实际运行。
 - M5沿用现有响应式PDF.js阅读器；真机Safari/Pencil待验证，PWA基础改造延期，不承诺整站离线。
 
 ## 实际改造
@@ -33,6 +33,17 @@
 
 ## 正式数据与费用
 
+## GitHub首次发布验收（2026-10-15续轮）
+
+- 用户确认新建`personal-learning-workbench`私有仓库。API验证现有凭据的登录账号为CapSantiago，创建后确认private=true；凭据仅在内存使用，未写入代码、远程URL或报告。
+- 首次提交357个源码/文档文件，约19.4MB；提交清单没有学习数据库、PDF/PPT、ZIP备份、账号配置、Token、私钥或虚拟环境。源码令牌/私钥格式扫描无发现，忽略规则不被视作绝对泄密检测。
+- `.gitattributes`让迁移SQL及PDF.js资源保持原始字节；211个敏感文件在暂存区和GitHub重新克隆中均与本机原件一致，避免换行转换破坏历史校验和。
+- GitHub远程重新克隆后，独立合成配置运行`launch_private.py --check`通过，未创建学习数据目录。不是Linux容器或完整579项在新克隆中重跑。
+- Git直连失败后，仅为发布/克隆命令使用当前系统已有代理；没有修改系统代理或全局Git配置。本轮只修改代码托管配置与文档，没有执行应用功能测试、云部署或正式数据操作。
+- 证据：`.sandbox/github-index-audit.json`、`github-repository.json`、`github-clone-report.json`。当前Docker引擎仍不可用，Oracle账号状态尚待用户确认。
+
+## 正式数据与费用说明
+
 审计前后`E:\PLW-Data`除可重建cache外135个文件哈希完全一致：无新增、无修改。正式数据库、课程、课件、笔记及活动指针没有被迁移或写入。测试全部在`.sandbox/test-runs`。没有上传学习资料、创建云账号/实例、购买域名/服务、修改Conda/ROS/SRTP环境或系统设置。
 
 按2026-10-15 Oracle官方文档，Always Free A1为总计2 OCPU/12GB，启动盘/块卷合计200GB，存在库存不足及闲置回收；账号实际可用性尚未验证。Tailscale个人非商业计划免费。来源与操作步骤见CLOUD_DEPLOYMENT。无法获得免费资源时先向用户说明，不擅自升级收费。
@@ -41,7 +52,7 @@
 
 1. 准备可用Linux Docker环境（用户后续提供云端或本机环境），构建ARM64镜像、独立空卷运行、账号登录与PDF核心功能、重启及重建持久化、完整恢复/回滚。此项完成前M2不算最终验收通过。
 2. M3：用户注册Oracle并确认免费库存、Tailscale登录/HTTPS；先合成部署，再在确认范围后迁移正式完整备份。真实iPad/iPhone不同网络、Windows关机后访问、跨设备批注保存、PDF下载离线均待测。
-3. M4：完成指定私有仓库首次推送与克隆校验；有云主机后实跑成功更新、构建失败、健康失败、旧镜像回退、版本显示及数据保留。
+3. M4：源码已推送并克隆校验；有云主机后实跑成功更新、构建失败、健康失败、旧镜像回退、版本显示及数据保留。
 4. M5：在真机上定位后局部修复触控、横竖屏、笔记任务编辑；基础manifest/图标/更新提示不阻塞上线，不开发离线双向同步。
 
 ## 文档和证据
