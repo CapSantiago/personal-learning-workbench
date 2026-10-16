@@ -1,8 +1,8 @@
 # PLW 私有云部署（0.3.1 准备版）
 
-**2026-10-16更新**：用户已选择并购买阿里云杭州ECS/Ubuntu24.04 AMD64，Docker已安装，Docker Hub连通失败后改用离线包。Linux构建及两个合成容器seed/check通过，36文件校验一致；正式Compose网站服务、Tailscale授权和私有HTTPS仍待执行。当前实际执行路线见[阿里云离线部署](ALIYUN_OFFLINE_DEPLOYMENT.md)，Oracle内容保留为此前方案。没有上传正式资料。
+**2026-10-17更新**：用户已购买阿里云杭州ECS/Ubuntu24.04 AMD64，Docker Hub连通失败后改用离线包。Linux构建及两容器合成验收通过，36文件校验一致；Tailscale已授权、Serve私有入口已配置，PLW账号与独立空云库已建立，Compose服务启动且回环健康通过。客户端HTTPS与设备验收仍待执行。当前路线见[阿里云离线部署](ALIYUN_OFFLINE_DEPLOYMENT.md)，Oracle内容保留为此前方案。没有上传正式资料。
 
-GitHub 账号：**CapSantiago**。目标是单人、免费优先、无需自购域名，保留 Streamlit + SQLite。本机仍无可用 Linux Docker 引擎；云端已完成合成容器验收，网站尚未上线。
+GitHub 账号：**CapSantiago**。目标是单人、免费优先、无需自购域名，保留 Streamlit + SQLite。本机仍无可用 Linux Docker 引擎；云端应用服务已启动，客户端访问尚未验收。
 
 ## M1 结论与最少改造
 

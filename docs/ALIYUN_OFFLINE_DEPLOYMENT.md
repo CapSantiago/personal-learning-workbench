@@ -1,6 +1,6 @@
 # 阿里云离线部署（PLW 0.3.1）
 
-更新：2026-10-17。适用于已购买的杭州 ECS、Ubuntu 24.04 x86_64、2核2GB、40GB、3Mbps。用户已在 Workbench 安装 Docker 29.9.1、Compose v5.6.0；离线镜像构建和两个合成容器seed/check已通过，36文件校验一致。Tailscale已安装并登录为plw，当前从第3节私有HTTPS继续，不重复prepare或安装。正式网站服务尚未启动。
+更新：2026-10-17。适用于已购买的杭州 ECS、Ubuntu 24.04 x86_64、2核2GB、40GB、3Mbps。Docker 29.9.1、Compose v5.6.0；离线构建和两容器合成验收已通过。Tailscale已登录，Serve私有入口、PLW账号、独立空云库已配置，Compose服务启动且回环健康检查通过。当前从第4节客户端访问验收继续，不重复prepare、configure或init。真实学习资料尚未迁移。
 
 服务器访问 Docker Hub 超时。使用 Windows 下载并校验官方 Python 镜像、PyPI wheel 和 Tailscale 静态包，再通过 Workbench 上传。没有更换 Streamlit/SQLite 架构、付费加速器或第三方公共镜像代理。此包不含真实学习数据或登录配置。
 
@@ -95,7 +95,7 @@ bash install_offline.sh status
 ## 当前实际状态与限制
 
 - 官方Python镜像、43个服务器wheel、Tailscale静态包已核对，用户已上传离线包并在Linux实际完成镜像导入、构建及两容器合成验收，36文件哈希一致。不是正式网站的Compose重启/更新验收。
-- Tailscale已安装、用户已登录，当前节点plw。HTTPS、PLW单账号和空库启动、真实设备访问仍待执行，不得称为已上线。
+- Tailscale已登录、Serve私有入口已配置；PLW单账号预检与独立空库初始化通过，Compose服务启动且回环健康返回ok、版本0.3.1。输出时Docker为health: starting，需复查；尚未确认客户端HTTPS访问与设备功能，不得称为跨设备验收完成。
 - 用户可通过Workbench公网与密码认证管理实例，VNC也已成功；私网路径仍失败。Tailscale对CGNAT来源的防护可能与阿里云内部服务地址冲突，需要只读查看实际防火墙规则后确定，不直接删除防护规则。
 - 本机Linux Docker引擎仍不可用。浏览器控制工具因Windows路径错误初始化失败；服务器命令由用户执行并提供日志，不能描述为代理已直接操作服务器。正式资料尚未迁移。
 
