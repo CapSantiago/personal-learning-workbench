@@ -2,6 +2,16 @@
 
 ## 2026-10-16 阿里云离线部署补充
 
+### 最新结果：Linux合成容器验收通过
+
+用户执行并提供日志：续跑脚本SHA-256及原部署包328文件清单通过，`plw:0.3.1-offline-21dab82`镜像构建成功。Linux/AMD64镜像ID为`sha256:2c6b5a778bb57f6dbf2c6402b9f75cd4f85e92af7d1463d21fb2912ed76ba5e9`。
+
+两个独立容器seed/check均通过schema4、中文PDF上传、两页PDF阅读副本、高亮、书签、阅读进度、Markdown公式笔记、任务完成、完整ZIP备份与隔离恢复；36个合成文件哈希一致，末尾`ACCEPTANCE PASSED`。证据目录`/var/tmp/plw-acceptance.xda3fje0`。测试不挂载正式学习库。
+
+尚未执行：正式Compose服务启动/重启/更新、私有HTTPS登录、Linux站点PDF.js浏览器交互、真实云端备份下载、Tailscale注册及iPad/iPhone真机测试。服务层合成验收不代替这些检查。
+
+### 先前排错记录（以下待执行项是当时状态）
+
 - 最新实机日志：离线镜像构建完成`#15 DONE 37.8s`；首次容器验收已运行至PDF夹具生成，子进程退出1，原CalledProcessError未展示stderr。构建完成不等于应用验收通过。
 - PDF夹具修复：PdfWriter改用BytesIO，子进程失败展示有限stderr。用实际pypdf与明确拒绝tell/seek的stdout替身验证，生成PDF可读且为两页；Windows合成seed/check再通过，36文件哈希一致。续跑脚本只对旧容器中的测试代码做内存替换，Bash/Python语法通过；Linux续跑待验证。
 

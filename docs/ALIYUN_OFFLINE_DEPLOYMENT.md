@@ -1,6 +1,6 @@
 # 阿里云离线部署（PLW 0.3.1）
 
-更新：2026-10-16。适用于已购买的杭州 ECS、Ubuntu 24.04 x86_64、2核2GB、40GB、3Mbps。用户已在 Workbench 安装 Docker 29.9.1、Compose v5.6.0，截图状态为 active；PLW 容器尚未在服务器运行。
+更新：2026-10-16。适用于已购买的杭州 ECS、Ubuntu 24.04 x86_64、2核2GB、40GB、3Mbps。用户已在 Workbench 安装 Docker 29.9.1、Compose v5.6.0；离线镜像构建和两个合成容器seed/check已通过，36文件校验一致。正式网站服务尚未启动；当前从第3节安装并登录Tailscale继续，不重复prepare。
 
 服务器访问 Docker Hub 超时。使用 Windows 下载并校验官方 Python 镜像、PyPI wheel 和 Tailscale 静态包，再通过 Workbench 上传。没有更换 Streamlit/SQLite 架构、付费加速器或第三方公共镜像代理。此包不含真实学习数据或登录配置。
 
@@ -44,7 +44,7 @@ bash install_offline.sh prepare
 
 随后在 `/var/tmp/plw-acceptance.*` 新目录、无网络容器内创建合成课程、两页 PDF、阅读版本、高亮、书签、进度、Markdown 公式笔记和已完成任务，生成完整 ZIP 并恢复至另一合成学习库。第二个容器验证同一测试卷的内容哈希及关联。结果保留供检查；不挂载 `/srv/plw/data`，不复制正式资料。
 
-最后应有 seed/check 两份 `passed: true` 和 `PREPARED`。这一步实际运行成功后，才可以记录 Linux 构建/容器持久化通过；目前只完成 Windows 同一脚本的预验收。
+最后应有 seed/check 两份 `passed: true` 和 `PREPARED`（续跑脚本为`ACCEPTANCE PASSED`）。2026-10-16用户提供的Linux实机续跑结果已通过，证据保留于`/var/tmp/plw-acceptance.xda3fje0`。这验证了两个合成容器之间的数据保留，正式Compose服务重启/更新仍须单独验收。
 
 ## 3. 安装并登录 Tailscale
 

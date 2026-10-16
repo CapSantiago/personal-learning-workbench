@@ -1,8 +1,17 @@
 # PLW 项目状态
 
-更新：2026-10-16，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。当前仍是本机网站，PLW 尚未在云端启动。
+更新：2026-10-16，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。云端离线构建及合成容器验收通过；正式网站服务尚未启动。
 
 ## 2026-10-16 阿里云部署推进
+
+### 最新实机结果（用户执行并提供终端日志）
+
+- `resume_linux_acceptance.sh`的SHA-256与原部署包328文件清单通过；镜像`plw:0.3.1-offline-21dab82`在Linux/AMD64构建成功，镜像ID为`sha256:2c6b5a778bb57f6dbf2c6402b9f75cd4f85e92af7d1463d21fb2912ed76ba5e9`。
+- 两个独立容器的seed/check均`passed: true`：schema4、中文PDF上传、两页阅读副本、高亮、书签、进度、Markdown公式笔记、任务完成、完整ZIP备份、隔离恢复；36个合成文件哈希一致。证据目录`/var/tmp/plw-acceptance.xda3fje0`。
+- 此结果证明合成数据在两个容器之间保留，不等于Compose正式服务重启/更新、HTTPS登录、PDF.js浏览器交互或iPad真机验收。未迁移真实学习资料。
+- 下一步：使用原离线安装器安装Tailscale，用户本人登录授权，配置私有HTTPS及PLW单账号，再初始化新的空云库并启动。保留原部署包与合成证据，不重复prepare。
+
+### 先前排错记录（其中“待验证”描述当时状态）
 
 - 最新用户日志确认离线Docker构建已到`#15 DONE 37.8s`，随后合成验收在子进程生成PDF时退出1，错误输出被CalledProcessError隐藏，未开始正式网站服务。
 - 原验收脚本直接让PdfWriter写stdout，而pypdf需要tell/定位能力。已改为先写BytesIO再输出字节，并保留子进程错误详情。实际pypdf的不可定位stdout回归通过，Windows新合成seed/check与36文件哈希验证通过；云端续跑结果待用户提供。
@@ -27,8 +36,8 @@
 ## 当前阶段
 
 - **M1已完成**：检查项目结构、运行入口、Windows依赖、配置、路径、数据库、上传、登录、阅读、备份与现有测试。首次审计时无Git；后续已初始化main，并确认创建CapSantiago/personal-learning-workbench私有仓库。Docker27.5.1客户端存在但引擎未运行，WSL没有发行版。
-- **M2代码准备与Windows验收已完成；Linux容器验收未完成**。用户明确选择先完成代码与Windows测试，容器测试留待环境就绪；没有安装Docker/WSL或修改系统。
-- M3已准备Tailscale部署步骤、完整ZIP备份下载与迁移维护命令；没有创建云实例、配置真实Tailscale或迁移正式学习资料。
+- **M2代码准备、Windows验收、Linux离线构建与合成容器验收已完成**。正式Compose启动、健康检查、重启及更新持久化仍待验收。本机没有安装Docker/WSL或修改系统。
+- M3已准备Tailscale部署步骤、完整ZIP备份下载与迁移维护命令；用户已购买阿里云实例，真实Tailscale授权、HTTPS及正式资料迁移尚未执行。
 - M4代码托管已完成：已初始化本地main，验证账号并创建[CapSantiago/personal-learning-workbench私有仓库](https://github.com/CapSantiago/personal-learning-workbench)，首次提交`b9bd36d`已推送。云端更新/失败回退未实际运行。
 - M5沿用现有响应式PDF.js阅读器；真机Safari/Pencil待验证，PWA基础改造延期，不承诺整站离线。
 
@@ -70,8 +79,8 @@
 
 ## 下一步与验收门槛
 
-1. 准备可用Linux Docker环境（用户后续提供云端或本机环境），构建ARM64镜像、独立空卷运行、账号登录与PDF核心功能、重启及重建持久化、完整恢复/回滚。此项完成前M2不算最终验收通过。
-2. M3：用户注册Oracle并确认免费库存、Tailscale登录/HTTPS；先合成部署，再在确认范围后迁移正式完整备份。真实iPad/iPhone不同网络、Windows关机后访问、跨设备批注保存、PDF下载离线均待测。
+1. 已在阿里云AMD64完成构建与合成容器验收；继续正式Compose空库启动、健康检查、账号登录与PDF核心浏览器功能、重启及重建持久化、恢复/回滚。剩余项目完成前M2不算最终全部验收通过。
+2. M3：在现有阿里云实例上完成Tailscale登录/HTTPS；新空云库验证后，在确认范围后迁移正式完整备份。真实iPad/iPhone不同网络、Windows关机后访问、跨设备批注保存、PDF下载离线均待测。
 3. M4：源码已推送并克隆校验；有云主机后实跑成功更新、构建失败、健康失败、旧镜像回退、版本显示及数据保留。
 4. M5：在真机上定位后局部修复触控、横竖屏、笔记任务编辑；基础manifest/图标/更新提示不阻塞上线，不开发离线双向同步。
 
