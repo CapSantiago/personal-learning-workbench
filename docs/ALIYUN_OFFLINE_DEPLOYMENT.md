@@ -26,6 +26,14 @@ python3 verify_offline_bundle.py /opt/plw-offline-20261016
 
 ## 2. 导入镜像、断网构建和隔离验收
 
+**首个20261016离线包的Docker29兼容修复**：若输出`Loaded base image identity mismatch.`，不要跳过检查或改原包清单。该包的config摘要与Docker29导入后manifest摘要不同。上传小包`PLW-Docker29-fix-20261016.zip`，校验SHA-256 `61808942f00aa17dd869b6cb20951ad2721ab86957018a9f2ff9c22fd5406381`后，在新的`/root/plw-docker29-fix-20261016`目录解压，执行：
+
+```bash
+python3 /root/plw-docker29-fix-20261016/resume_offline_prepare.py --bundle /opt/plw-offline-20261016
+```
+
+小包不能解压进原部署目录，原清单会拒绝额外文件。兼容启动器重新核对原包及镜像config/四层哈希，计算containerd导入清单摘要后继续原prepare流程，原目录文件保持不变。后续install-tailscale/configure/init/start仍使用原安装器。新源码安装器已直接调用兼容验证器。
+
 ```bash
 bash install_offline.sh prepare
 ```

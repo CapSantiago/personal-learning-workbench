@@ -16,6 +16,7 @@ FILES += ['Dockerfile','compose.yaml','.env.example','.dockerignore',
     'docs/CLOUD_DEPLOYMENT.md','docs/CLOUD_DATA_BACKUP.md','docs/UPDATE_WORKFLOW.md',
     'docs/CLOUD_TEST_REPORT.md','docs/PROJECT_STATUS.md']
 FILES += ['docs/ALIYUN_OFFLINE_DEPLOYMENT.md']
+FILES += ['scripts/verify_loaded_image.py','scripts/resume_offline_prepare.py']
 
 
 def package(target):

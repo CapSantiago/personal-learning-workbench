@@ -19,8 +19,7 @@ compose() { docker compose --env-file "$ENVFILE" -f "$APP/compose.yaml" "$@"; }
 case "$ACTION" in
   prepare)
     docker load -i "$ROOT/python-3.14-slim-bookworm-amd64.tar.gz"
-    expected="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["config_digest"])' "$ROOT/base-image-provenance.json")"
-    [[ "$(docker image inspect python:3.14-slim-bookworm --format '{{.Id}}')" == "$expected" ]] || fail 'Loaded base image identity mismatch.'
+    python3 "$ROOT/verify_loaded_image.py" "$ROOT"
     DOCKER_BUILDKIT=1 docker build --network=none --pull=false --progress=plain \
       -f "$APP/Dockerfile.offline" -t "$IMAGE" "$APP"
     # A fresh host directory is retained for inspection; no production volumes.

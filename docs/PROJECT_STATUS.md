@@ -4,6 +4,10 @@
 
 ## 2026-10-16 阿里云部署推进
 
+- 用户实机反馈：221MB部署ZIP校验OK、328条文件清单通过、Python基础镜像已成功Docker load；随后旧安装器误将Docker29返回的manifest摘要与config摘要比较而停止，尚未构建PLW。
+- 已按containerd导入规则从原始config与四层内容重建清单，得到`sha256:86dec9b258fdaaf77fe397b059e1ad87210afcdfca5a028c9d795c6b65d0d1ba`，与用户实机inspect完全一致。新增兼容验证器同时核对平台、层序列、config和重建清单摘要，不跳过校验。
+- 生成3042字节修复包`.sandbox/releases/PLW-Docker29-fix-20261016.zip`，SHA-256 `61808942f00aa17dd869b6cb20951ad2721ab86957018a9f2ff9c22fd5406381`。在原部署目录之外运行，原包字节及清单保持不变，仅在内存替换旧校验步骤后继续prepare。19项相关测试通过，生成的Bash语法通过；云端补丁执行和应用构建仍待用户输出。
+
 - 用户已自行购买杭州 ECS 年付99元套餐：Ubuntu24.04 x86_64、2核2GB、40GB、3Mbps；账户操作和付费由用户完成。用户终端输出确认 Docker29.9.1、Compose v5.6.0、服务active，Git2.43.0已安装。
 - ECS无法直连Docker Hub，拉取Python基础镜像超时；阿里云官方加速器停止同步最新镜像，改用Windows中转的离线部署包，不使用收费加速或不明公共代理。
 - 官方Python镜像、43个Linux/AMD64 CPython3.14依赖wheel、Tailscale官方静态安装包已下载并逐项核对SHA-256。镜像另核对配置、压缩层和解压层摘要。离线pip解析覆盖全部服务器依赖，无本机依赖安装。

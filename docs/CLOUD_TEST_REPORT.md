@@ -2,6 +2,9 @@
 
 ## 2026-10-16 阿里云离线部署补充
 
+- 续轮实机输出：部署ZIP与文件清单通过，Docker load成功；旧config-ID比较失败。用户提供的四层DiffID与本地逐字节验证结果一致；按containerd源码重建899字节manifest的摘要与实机返回的`86dec9...d1ba`完全一致，定位为安装器兼容缺陷，尚未执行应用构建。
+- 修复回归：`pytest tests/test_offline_image_identity.py tests/test_offline_bundle.py -q`，**19 passed in 0.15s**；覆盖Docker29真实摘要向量、旧config-ID、错误ID/平台/层/descriptor拒绝、归档内容验证、不改原安装器的内存替换。新安装器及生成的兼容Bash语法通过。补丁ZIP CRC通过，实际cloud resume待验证。
+
 - 用户提供的ECS终端输出：Docker29.9.1、Compose v5.6.0、active。随后docker pull Python基础镜像连接Docker Hub超时；不是PLW容器验收通过。
 - Windows通过Docker官方Registry接口下载Linux/AMD64基础镜像，SHA-256验证配置、压缩层和解压层；归档重新读取/摘要校验。43个Linux wheel按此前固定版本解析报告的PyPI哈希逐一验证，离线pip --dry-run --ignore-installed --no-index解析全部依赖退出0。
 - `scripts/offline_smoke.py seed`和独立进程`check`在Windows合成目录通过：真实生成的两页PDF、上传、阅读副本、高亮、书签、进度、笔记、任务完成、完整备份及隔离恢复；36文件哈希一致。它们不使用正式资料，也不代表Linux执行。
