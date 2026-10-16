@@ -4,6 +4,10 @@
 
 ## 2026-10-16 阿里云部署推进
 
+- 最新用户日志确认离线Docker构建已到`#15 DONE 37.8s`，随后合成验收在子进程生成PDF时退出1，错误输出被CalledProcessError隐藏，未开始正式网站服务。
+- 原验收脚本直接让PdfWriter写stdout，而pypdf需要tell/定位能力。已改为先写BytesIO再输出字节，并保留子进程错误详情。实际pypdf的不可定位stdout回归通过，Windows新合成seed/check与36文件哈希验证通过；云端续跑结果待用户提供。
+- 提供`scripts/resume_linux_acceptance.sh`：校验原包、复用现有镜像、仅在内存修正旧验收脚本，在新的合成卷用两个容器执行seed/check。不重新构建、不改原包、不挂载正式数据目录。已核对原包中的替换目标、Python编译与Bash语法；当前不声称Linux功能验收已通过。
+
 - 用户实机反馈：221MB部署ZIP校验OK、328条文件清单通过、Python基础镜像已成功Docker load；随后旧安装器误将Docker29返回的manifest摘要与config摘要比较而停止，尚未构建PLW。
 - 已按containerd导入规则从原始config与四层内容重建清单，得到`sha256:86dec9b258fdaaf77fe397b059e1ad87210afcdfca5a028c9d795c6b65d0d1ba`，与用户实机inspect完全一致。新增兼容验证器同时核对平台、层序列、config和重建清单摘要，不跳过校验。
 - 生成3042字节修复包`.sandbox/releases/PLW-Docker29-fix-20261016.zip`，SHA-256 `61808942f00aa17dd869b6cb20951ad2721ab86957018a9f2ff9c22fd5406381`。在原部署目录之外运行，原包字节及清单保持不变，仅在内存替换旧校验步骤后继续prepare。19项相关测试通过，生成的Bash语法通过；云端补丁执行和应用构建仍待用户输出。

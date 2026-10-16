@@ -2,6 +2,9 @@
 
 ## 2026-10-16 阿里云离线部署补充
 
+- 最新实机日志：离线镜像构建完成`#15 DONE 37.8s`；首次容器验收已运行至PDF夹具生成，子进程退出1，原CalledProcessError未展示stderr。构建完成不等于应用验收通过。
+- PDF夹具修复：PdfWriter改用BytesIO，子进程失败展示有限stderr。用实际pypdf与明确拒绝tell/seek的stdout替身验证，生成PDF可读且为两页；Windows合成seed/check再通过，36文件哈希一致。续跑脚本只对旧容器中的测试代码做内存替换，Bash/Python语法通过；Linux续跑待验证。
+
 - 续轮实机输出：部署ZIP与文件清单通过，Docker load成功；旧config-ID比较失败。用户提供的四层DiffID与本地逐字节验证结果一致；按containerd源码重建899字节manifest的摘要与实机返回的`86dec9...d1ba`完全一致，定位为安装器兼容缺陷，尚未执行应用构建。
 - 修复回归：`pytest tests/test_offline_image_identity.py tests/test_offline_bundle.py -q`，**19 passed in 0.15s**；覆盖Docker29真实摘要向量、旧config-ID、错误ID/平台/层/descriptor拒绝、归档内容验证、不改原安装器的内存替换。新安装器及生成的兼容Bash语法通过。补丁ZIP CRC通过，实际cloud resume待验证。
 

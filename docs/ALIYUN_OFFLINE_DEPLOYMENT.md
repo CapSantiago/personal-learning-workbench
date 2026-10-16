@@ -26,6 +26,8 @@ python3 verify_offline_bundle.py /opt/plw-offline-20261016
 
 ## 2. 导入镜像、断网构建和隔离验收
 
+**已构建镜像后的PDF夹具兼容修复**：若镜像构建已完成，但offline_smoke.py的PdfWriter子进程退出1，可上传最新源码中的`scripts/resume_linux_acceptance.sh`到服务器`/root`，执行`bash /root/resume_linux_acceptance.sh /opt/plw-offline-20261016`。它复用原镜像，不触及学习目录，修正Linux stdout的定位兼容写法后，用两个新容器验证合成卷；其他异常会显示子进程stderr供排查。成功应显示两份passed及ACCEPTANCE PASSED。
+
 **首个20261016离线包的Docker29兼容修复**：若输出`Loaded base image identity mismatch.`，不要跳过检查或改原包清单。该包的config摘要与Docker29导入后manifest摘要不同。上传小包`PLW-Docker29-fix-20261016.zip`，校验SHA-256 `61808942f00aa17dd869b6cb20951ad2721ab86957018a9f2ff9c22fd5406381`后，在新的`/root/plw-docker29-fix-20261016`目录解压，执行：
 
 ```bash

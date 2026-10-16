@@ -57,9 +57,12 @@ def main():
         course = service.create_course(term['id'], '合成机器人课程', request_id=uid())
         pdf_python = os.environ.get('PLW_PDF_PYTHON', sys.executable)
         result = subprocess.run([pdf_python, '-c',
-            'import sys; from pypdf import PdfWriter; w=PdfWriter(); '
-            'w.add_blank_page(width=960,height=540); w.add_blank_page(width=960,height=540); w.write(sys.stdout.buffer)'],
-            capture_output=True, timeout=30, check=True)
+            'import io, sys; from pypdf import PdfWriter; w=PdfWriter(); '
+            'w.add_blank_page(width=960,height=540); w.add_blank_page(width=960,height=540); '
+            'buffer=io.BytesIO(); w.write(buffer); sys.stdout.buffer.write(buffer.getvalue())'],
+            capture_output=True, timeout=30, check=False)
+        if result.returncode:
+            raise RuntimeError('Synthetic PDF generation failed: ' + result.stderr.decode('utf-8', errors='replace')[-2000:])
         material = MaterialService(path).import_upload(course['id'], '中文 空格 课件.pdf', result.stdout, request_id=uid())
         work = Workbench(path)
         edition = work.create_edition(material['id'], uid(), local_copy_confirmed=True)
