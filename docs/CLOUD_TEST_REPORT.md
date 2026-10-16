@@ -8,6 +8,8 @@
 - `pytest tests/test_offline_bundle.py tests/test_cloud_compat.py tests/test_private_auth.py -q`：**37 passed in 10.87s**。包括篡改、额外Python文件、危险路径、重复/缺失条目拒绝。
 - `bash -n scripts/install_offline.sh`退出0。安装器支持断网构建和两个容器之间的独立合成卷检查；目前尚未在Linux实际执行。
 - 真实云端上传、Docker load/build/run、Tailscale注册/HTTPS、用户登录、Safari/Pencil、电脑关机后访问、云端下载备份：**待执行**。浏览器控制运行时因Windows路径错误无法初始化，没有建立其他已认证服务器连接。
+- 实际归档验收：329个文件、221463298字节，外层ZIP CRC和全部清单SHA-256通过，Python镜像归档中的config与四个解压层摘要再次通过；Tailscale限定提取及ELF文件头通过，未执行Linux程序。源码提交`21dab82`已推送，GitHub远程SHA与本机一致。Compose配置解析退出0。
+- 只读SSH连接在主机信任检查阶段失败（未知ED25519主机密钥），没有接受新主机密钥或执行服务器命令。当前阻塞是缺少可用且可信的服务器控制通道，不能把离线准备当成网站上线。
 
 日期：2026-10-15；源码0.3.1；Windows11、Python3.14.3、Streamlit1.65.0。所有样本为独立合成资料，没有使用正式库做测试。
 

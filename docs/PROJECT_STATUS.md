@@ -11,6 +11,8 @@
 - Windows合成seed/check两进程通过：课程、中文PDF、阅读副本、高亮/书签/进度、笔记/公式、任务完成、完整ZIP及隔离恢复，36个文件哈希保留。针对离线包、云兼容、认证的37项pytest通过。Bash安装脚本语法通过。此处不是Linux容器执行结果。
 - 浏览器控制工具初始化/重试仍因Windows中文路径的`permission path cannot be represented losslessly`失败，没有接管阿里云Workbench，也未取得其他服务器认证通道。网站上传/容器运行/私有HTTPS/真机访问尚未执行，不能声称上线。
 - 下一步按[阿里云离线部署](ALIYUN_OFFLINE_DEPLOYMENT.md)：上传校验 → prepare导入构建与隔离验收 → Tailscale用户授权 → 单账号配置 → 新空云库 → 私有HTTPS验收。正式学习资料不自动迁移。
+- 离线包已实际生成并重新读取校验：`.sandbox/releases/PLW-0.3.1-offline-linux-amd64-20261016.zip`，329个文件、221463298字节；SHA-256为`fe4e9db84497e91facaf9efb5ea4118b1291c866482ec14dad274fd9b4817bd5`。包内源码对应`21dab82`，已推送并核对GitHub远程；后续仅状态文档变化不改变该包快照。
+- 最后只读尝试既有SSH通道，因本机没有已验证的服务器ED25519主机密钥而停止（StrictHostKeyChecking=yes），未接受未知密钥、未输入密码、未运行远程命令。需要恢复浏览器控制或用户核对主机指纹后建立SSH管理通道。
 
 以下为此前阶段记录；“没有云实例”等表述只描述2026-10-15状态。
 
