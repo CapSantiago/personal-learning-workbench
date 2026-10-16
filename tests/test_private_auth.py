@@ -106,6 +106,55 @@ def test_reject_cross_site_and_plain_http(gate,origin,extra,scheme):
     assert asyncio.run(fetch(gate,'/plw-auth/login',origin=origin,extra=extra,scheme=scheme))[0]==403
 
 
+NAVIGATION=((b'sec-fetch-site',b'cross-site'),(b'sec-fetch-mode',b'navigate'),
+            (b'sec-fetch-dest',b'document'))
+
+
+@pytest.mark.parametrize('path,status',[('/',303),('/plw-auth/login',200)])
+def test_external_entry_navigation_requires_login(gate,path,status):
+    result,headers,body=asyncio.run(fetch(gate,path,origin=None,extra=NAVIGATION))
+    assert result==status
+    assert b'private content' not in body
+    assert not gate.sessions
+    if path=='/':assert headers[b'location']==b'/plw-auth/login'
+
+
+@pytest.mark.parametrize('path,method,origin,extra',[
+    ('/','HEAD',None,NAVIGATION),
+    ('/plw-auth/login','HEAD',None,NAVIGATION),
+    ('/','POST',None,NAVIGATION),
+    ('/plw-auth/login','POST',ORIGIN,NAVIGATION),
+    ('/plw-auth/login','GET','https://evil.example',NAVIGATION),
+    ('/plw-reader/token/download/id','GET',None,NAVIGATION),
+    ('/_stcore/upload_file/a/b','PUT',None,NAVIGATION),
+    ('/plw-auth/logout','GET',None,NAVIGATION),
+    ('/','GET',None,((b'sec-fetch-site',b'cross-site'),(b'sec-fetch-mode',b'cors'),(b'sec-fetch-dest',b'document'))),
+    ('/','GET',None,((b'sec-fetch-site',b'cross-site'),(b'sec-fetch-mode',b'navigate'),(b'sec-fetch-dest',b'iframe'))),
+])
+def test_external_navigation_does_not_open_private_routes(gate,path,method,origin,extra):
+    async def scenario():
+        _,cookie,_=await login(gate)
+        status,_,body=await fetch(gate,path,method,cookie=cookie,origin=origin,extra=extra)
+        assert status==403
+        assert b'private content' not in body
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize('host,scheme',[(b'evil.example','https'),(b'study.example.test','http')])
+def test_external_entry_keeps_host_and_https_checks(digest,host,scheme):
+    app=PrivateAccess(inner,username='student',password_digest=digest,origin=ORIGIN)
+    # A separate Host header is used to avoid duplicate-header semantics.
+    async def scenario():
+        sent=[]
+        scope=dict(type='http',method='GET',path='/',scheme=scheme,
+                   headers=[(b'host',host),*NAVIGATION],query_string=b'')
+        async def receive():return {'type':'http.request','body':b''}
+        async def send(message):sent.append(message)
+        await app(scope,receive,send)
+        return sent[0]['status']
+    assert asyncio.run(scenario())==403
+
+
 def test_websocket_auth_origin_logout_and_expiry(gate):
     async def scenario():
         incoming=asyncio.Queue();sent=asyncio.Queue()

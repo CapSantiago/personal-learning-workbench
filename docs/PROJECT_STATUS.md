@@ -4,6 +4,15 @@
 
 ## 2026-10-17 管理连接恢复与Tailscale登录
 
+### 当前访问排错进展
+
+- 用户实机确认eth0的DNS为100.100.2.136/138；tailscaled日志中ACME域名解析超时，ts-input对100.64.0.0/10的DROP计数持续增长。添加仅限eth0、这两个DNS、UDP/TCP源端口53、ESTABLISHED/REPLY的四条带标记例外后，解析恢复且ACME目录返回200。规则目前仅运行时生效，持久化脚本已准备，尚未在Linux安装/验收。
+- 代理在Windows真实执行Tailscale状态、域名解析、TCP443及TLS测试：电脑已连接，云节点在线；DNS修复后证书校验成功，匿名入口303重定向到登录页，跟随重定向200。未输入网站密码或验证已登录功能。
+- 本机Clash Verge的系统代理开启时，同网址经127.0.0.1:7897出现TLS握手失败，绕代理直连200；需在Clash Verge为PLW域名及对应Tailscale IP添加系统代理绕过项。此结论来自同机对照，不是推测；代理配置未被自动修改。
+- 另复现跨站顶层导航403：旧PrivateAccess拒绝所有Sec-Fetch-Site: cross-site。已局部修复，仅允许无Origin、navigate/document的GET进入根路径或登录页；仍需登录，其他跨站读取、上传、POST、iframe和WebSocket限制保留。Windows相关测试41通过，11.96秒；云端旧镜像尚未应用修复。手动从地址栏输入网站地址可避开这一导航问题。
+
+以下为此前同日的阶段记录，以本节最新进展为准。
+
 - 用户已通过VNC登录，确认云助手服务启动；重新读取systemd配置并重启云助手后，控制台状态恢复正常。Workbench私网连接仍失败，切换公网与密码认证后成功。用户已自行更换截图中暴露的密码；不记录密码或授权凭证。
 - 用户新截图确认原部署包328文件清单通过。离线安装器发现既有Tailscale而拒绝覆盖，随后`tailscale up --hostname=plw`及`tailscale status`正常返回，列表包含当前Linux节点`plw`。本轮不重复安装，不重复prepare。
 - 注意潜在CGNAT冲突：Workbench私网来源`100.104.0.0/16`属于Tailscale的`100.64.0.0/10`防伪规则范围。[Tailscale官方规则说明](https://tailscale.com/docs/reference/netfilter-modes)指出非tailscale0接口收到该来源范围时会丢弃。这与公网成功/私网失败相符，但尚未检查此服务器规则或计数器，不能记为已确认根因。只读核查后再决定是否需要最小网络修复，不关闭防火墙或全局取消防护。

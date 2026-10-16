@@ -130,7 +130,15 @@ body{margin:0;background:#f6f8f6;color:#243b35;font:16px system-ui,sans-serif;di
         valid_transport=not self.secure or scheme or connection.headers.get('x-forwarded-proto')=='https'
         supplied_origin=connection.headers.get('origin')
         cross_site=connection.headers.get('sec-fetch-site')=='cross-site'
-        if not valid_host or not valid_transport or cross_site or supplied_origin not in (None,self.origin):
+        # A normal external link may open only the entry/login document. It must
+        # still pass login; cross-site API, file, frame and write requests stay denied.
+        entry_navigation=(scope['type']=='http' and scope.get('method')=='GET'
+            and scope.get('path') in ('/','/plw-auth/login')
+            and connection.headers.get('sec-fetch-mode')=='navigate'
+            and connection.headers.get('sec-fetch-dest')=='document'
+            and supplied_origin is None)
+        if (not valid_host or not valid_transport or cross_site and not entry_navigation
+                or supplied_origin not in (None,self.origin)):
             if scope['type']=='websocket':return await send({'type':'websocket.close','code':1008})
             return await Response('Forbidden',status_code=403)(scope,receive,send)
         if self.secure:
