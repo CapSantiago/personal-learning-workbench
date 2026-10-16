@@ -1,10 +1,14 @@
 # PLW 项目状态
 
-更新：2026-10-17，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。云端服务已启动，空库初始化与回环健康检查通过；跨设备HTTPS登录尚待验证。
+更新：2026-10-17，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。云端空库已启动，Windows已通过私有HTTPS登录；iPad功能、持久化重启及完整备份下载验收待完成。
 
 ## 2026-10-17 管理连接恢复与Tailscale登录
 
 ### 当前访问排错进展
+
+- 最新用户截图确认已登录Streamlit云端主页，显示独立空库首次课程引导。Windows系统代理保持开启，PLW绕过项已实际生效；既有Windows学习资料尚未迁移。
+- 新连接实测：云节点经DERP(hkg)中继，三次172/175/185ms，尚未直连。本机UDP可用、NAT映射随目标变化；建议先检查云端UDP41641入方向规则，不能承诺仅开放该端口一定建立直连。3Mbps带宽也限制大文件首次传输；暂不建议购买升级。
+- DNS持久化工具与[操作说明](ALIYUN_DNS_FIX.md)已准备：精确四条例外、幂等检查和定向移除，systemd ExecStartPost在Tailscale每次启动后补充。安装、服务重启与整机重启仍需用户实机验收。
 
 - 用户实机确认eth0的DNS为100.100.2.136/138；tailscaled日志中ACME域名解析超时，ts-input对100.64.0.0/10的DROP计数持续增长。添加仅限eth0、这两个DNS、UDP/TCP源端口53、ESTABLISHED/REPLY的四条带标记例外后，解析恢复且ACME目录返回200。规则目前仅运行时生效，持久化脚本已准备，尚未在Linux安装/验收。
 - 代理在Windows真实执行Tailscale状态、域名解析、TCP443及TLS测试：电脑已连接，云节点在线；DNS修复后证书校验成功，匿名入口303重定向到登录页，跟随重定向200。未输入网站密码或验证已登录功能。
