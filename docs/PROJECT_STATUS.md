@@ -1,6 +1,13 @@
 # PLW 项目状态
 
-更新：2026-10-16，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。云端离线构建及合成容器验收通过；正式网站服务尚未启动。
+更新：2026-10-17，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。云端离线构建及合成容器验收通过；正式网站服务尚未启动。
+
+## 2026-10-17 管理连接恢复与Tailscale登录
+
+- 用户已通过VNC登录，确认云助手服务启动；重新读取systemd配置并重启云助手后，控制台状态恢复正常。Workbench私网连接仍失败，切换公网与密码认证后成功。用户已自行更换截图中暴露的密码；不记录密码或授权凭证。
+- 用户新截图确认原部署包328文件清单通过。离线安装器发现既有Tailscale而拒绝覆盖，随后`tailscale up --hostname=plw`及`tailscale status`正常返回，列表包含当前Linux节点`plw`。本轮不重复安装，不重复prepare。
+- 注意潜在CGNAT冲突：Workbench私网来源`100.104.0.0/16`属于Tailscale的`100.64.0.0/10`防伪规则范围。[Tailscale官方规则说明](https://tailscale.com/docs/reference/netfilter-modes)指出非tailscale0接口收到该来源范围时会丢弃。这与公网成功/私网失败相符，但尚未检查此服务器规则或计数器，不能记为已确认根因。只读核查后再决定是否需要最小网络修复，不关闭防火墙或全局取消防护。
+- 下一步：配置Tailscale Serve私有HTTPS、单账号配置、新空云库和Compose启动；真实浏览器访问、容器重启与设备验收仍待执行。现阶段无正式学习资料迁移。
 
 ## 2026-10-16 阿里云部署推进
 
