@@ -12,8 +12,10 @@ FILES=['app.py','README.md','pyproject.toml','requirements.lock.txt','requiremen
     'scripts/convert_courseware.ps1','scripts/export_courseware_video.ps1','scripts/ocr_helper.cs','scripts/ocr_worker.py']
 FILES += ['Dockerfile','compose.yaml','.env.example','.dockerignore',
     'scripts/cloud_data.py','scripts/healthcheck.py','scripts/cloud_compose.sh','scripts/update_cloud.sh',
+    'scripts/offline_smoke.py','scripts/verify_offline_bundle.py','scripts/install_offline.sh','scripts/extract_tailscale.py',
     'docs/CLOUD_DEPLOYMENT.md','docs/CLOUD_DATA_BACKUP.md','docs/UPDATE_WORKFLOW.md',
     'docs/CLOUD_TEST_REPORT.md','docs/PROJECT_STATUS.md']
+FILES += ['docs/ALIYUN_OFFLINE_DEPLOYMENT.md']
 
 
 def package(target):

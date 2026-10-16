@@ -1,6 +1,18 @@
 # PLW 项目状态
 
-更新：2026-10-15，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。当前仍是本机网站，尚未部署云端。
+更新：2026-10-16，Asia/Shanghai。源码版本 **0.3.1**；新学习库/云端目标 **schema4**，已有Windows本地schema3保持兼容，不自动迁移。GitHub账号：**CapSantiago**。当前仍是本机网站，PLW 尚未在云端启动。
+
+## 2026-10-16 阿里云部署推进
+
+- 用户已自行购买杭州 ECS 年付99元套餐：Ubuntu24.04 x86_64、2核2GB、40GB、3Mbps；账户操作和付费由用户完成。用户终端输出确认 Docker29.9.1、Compose v5.6.0、服务active，Git2.43.0已安装。
+- ECS无法直连Docker Hub，拉取Python基础镜像超时；阿里云官方加速器停止同步最新镜像，改用Windows中转的离线部署包，不使用收费加速或不明公共代理。
+- 官方Python镜像、43个Linux/AMD64 CPython3.14依赖wheel、Tailscale官方静态安装包已下载并逐项核对SHA-256。镜像另核对配置、压缩层和解压层摘要。离线pip解析覆盖全部服务器依赖，无本机依赖安装。
+- 增加离线包清单校验、限定文件提取、分阶段安装脚本与合成验收脚本。仅prepare阶段构建及测试；账号设置/Tailscale授权另行交互，不内置任何真实密码。真实学习数据不进入包。
+- Windows合成seed/check两进程通过：课程、中文PDF、阅读副本、高亮/书签/进度、笔记/公式、任务完成、完整ZIP及隔离恢复，36个文件哈希保留。针对离线包、云兼容、认证的37项pytest通过。Bash安装脚本语法通过。此处不是Linux容器执行结果。
+- 浏览器控制工具初始化/重试仍因Windows中文路径的`permission path cannot be represented losslessly`失败，没有接管阿里云Workbench，也未取得其他服务器认证通道。网站上传/容器运行/私有HTTPS/真机访问尚未执行，不能声称上线。
+- 下一步按[阿里云离线部署](ALIYUN_OFFLINE_DEPLOYMENT.md)：上传校验 → prepare导入构建与隔离验收 → Tailscale用户授权 → 单账号配置 → 新空云库 → 私有HTTPS验收。正式学习资料不自动迁移。
+
+以下为此前阶段记录；“没有云实例”等表述只描述2026-10-15状态。
 
 ## 当前阶段
 

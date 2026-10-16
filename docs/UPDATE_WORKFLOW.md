@@ -1,5 +1,11 @@
 # Windows开发与私人网站更新
 
+## 2026-10-16 阿里云离线首次部署说明
+
+当前ECS不能直连Docker Hub，先使用[离线部署流程](ALIYUN_OFFLINE_DEPLOYMENT.md)。该包是源码快照和官方运行环境的运输包，不含Git目录、账号或正式学习数据，也不是已构建且已验收的PLW镜像。
+
+离线目录不能直接运行下文的`git pull`或`update_cloud.sh`。后续发布仍在Windows测试/提交源码，再生成新快照及离线依赖包；新包先在云端合成环境验收、备份当前完整云库，然后明确切换镜像，保留旧版与旧数据以回退。当前尚未实际部署，因此不能标记云端更新或回退通过。
+
 维护者GitHub账号：**CapSantiago**。本地目录 `E:\Projects\PLW` 已初始化main分支。用户已确认并创建私有仓库：[CapSantiago/personal-learning-workbench](https://github.com/CapSantiago/personal-learning-workbench)。本轮先发布代码，云端Docker与Tailscale仍待实际环境。
 
 2026-10-15首次发布完成：提交`b9bd36d`已推送，远程重新克隆与独立部署预检通过；211个迁移/PDF.js文件字节一致。真实Linux构建和更新回退仍待验收。

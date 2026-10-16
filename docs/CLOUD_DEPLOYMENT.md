@@ -1,6 +1,8 @@
 # PLW 私有云部署（0.3.1 准备版）
 
-GitHub 账号：**CapSantiago**。目标是单人、免费优先、无需自购域名，保留 Streamlit + SQLite。代码已准备；没有云账号实机、没有本机 Linux Docker 引擎，不能把本手册当作已上线或已完成容器验收。
+**2026-10-16更新**：用户已选择并购买阿里云杭州ECS/Ubuntu24.04 AMD64，Docker已安装，Docker Hub连通失败。当前实际执行路线见[阿里云离线部署](ALIYUN_OFFLINE_DEPLOYMENT.md)，Oracle内容保留为此前方案。PLW容器与Tailscale尚未实机运行；没有上传正式资料。
+
+GitHub 账号：**CapSantiago**。目标是单人、免费优先、无需自购域名，保留 Streamlit + SQLite。代码已准备；本机仍无可用 Linux Docker 引擎，云端 PLW 容器尚未验收，不能把本手册当作已上线。
 
 ## M1 结论与最少改造
 

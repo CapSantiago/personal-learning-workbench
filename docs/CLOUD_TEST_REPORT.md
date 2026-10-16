@@ -1,5 +1,14 @@
 # 云端准备测试报告
 
+## 2026-10-16 阿里云离线部署补充
+
+- 用户提供的ECS终端输出：Docker29.9.1、Compose v5.6.0、active。随后docker pull Python基础镜像连接Docker Hub超时；不是PLW容器验收通过。
+- Windows通过Docker官方Registry接口下载Linux/AMD64基础镜像，SHA-256验证配置、压缩层和解压层；归档重新读取/摘要校验。43个Linux wheel按此前固定版本解析报告的PyPI哈希逐一验证，离线pip --dry-run --ignore-installed --no-index解析全部依赖退出0。
+- `scripts/offline_smoke.py seed`和独立进程`check`在Windows合成目录通过：真实生成的两页PDF、上传、阅读副本、高亮、书签、进度、笔记、任务完成、完整备份及隔离恢复；36文件哈希一致。它们不使用正式资料，也不代表Linux执行。
+- `pytest tests/test_offline_bundle.py tests/test_cloud_compat.py tests/test_private_auth.py -q`：**37 passed in 10.87s**。包括篡改、额外Python文件、危险路径、重复/缺失条目拒绝。
+- `bash -n scripts/install_offline.sh`退出0。安装器支持断网构建和两个容器之间的独立合成卷检查；目前尚未在Linux实际执行。
+- 真实云端上传、Docker load/build/run、Tailscale注册/HTTPS、用户登录、Safari/Pencil、电脑关机后访问、云端下载备份：**待执行**。浏览器控制运行时因Windows路径错误无法初始化，没有建立其他已认证服务器连接。
+
 日期：2026-10-15；源码0.3.1；Windows11、Python3.14.3、Streamlit1.65.0。所有样本为独立合成资料，没有使用正式库做测试。
 
 | 检查 | 实际结果 | 限制 |
