@@ -71,7 +71,7 @@ ok=0
 for _ in {1..30}; do
   if [[ "$(docker inspect --format '{{.Image}}' plw-plw-1)" == "$(docker image inspect --format '{{.Id}}' "$NEW")" ]] \
     && curl --noproxy '*' --fail --silent --max-time 3 http://127.0.0.1:8501/plw-health \
-      | python3 -c 'import json,sys; s=json.load(sys.stdin); assert s.get("ok") is True and s.get("initialized") is True'; then
+      | python3 -c 'import json,sys; s=json.loads(sys.stdin.read() or "{}"); sys.exit(0 if s.get("ok") is True and s.get("initialized") is True else 1)'; then
     ok=1; break
   fi
   sleep 2
