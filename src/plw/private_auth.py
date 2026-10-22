@@ -15,6 +15,10 @@ from urllib.parse import parse_qs, urlsplit
 
 from starlette.requests import HTTPConnection
 from starlette.responses import HTMLResponse, RedirectResponse, Response
+from starlette.middleware.gzip import GZipMiddleware
+from starlette.datastructures import Headers, MutableHeaders
+
+from plw.private_assets import accepts_gzip, cacheable_asset_response, versioned_asset_request
 
 COOKIE='plw_private_session'
 
@@ -64,6 +68,7 @@ class PrivateAccess:
         self.sessions={};self.attempts=deque();self.checking=False
         self.form_secret=secrets.token_bytes(32)
         self.health_check=health_check
+        self.compressed_assets=GZipMiddleware(app,minimum_size=1024,compresslevel=5)
 
     def _form_token(self):
         stamp=str(int(time.time()))
@@ -214,7 +219,18 @@ body{margin:0;background:#f6f8f6;color:#243b35;font:16px system-ui,sans-serif;di
             return await Response('Forbidden',403)(scope,receive,send)
         async def protected_send(message):
             if message['type']=='http.response.start':
+                cacheable=cacheable_asset_response(scope,message)
                 headers=[(k,v) for k,v in message.get('headers',[]) if k.lower()!=b'cache-control']
-                message={**message,'headers':headers+[(b'cache-control',b'private, no-store'),(b'x-frame-options',b'SAMEORIGIN')]}
+                if cacheable:
+                    # Gzip and identity are different representations of the
+                    # same framework file. Keep validators weak across both.
+                    headers=[(k,b'W/'+v if k.lower()==b'etag' and not v.startswith(b'W/') else v) for k,v in headers]
+                    if 'accept-encoding' not in {v.strip().lower() for v in Headers(raw=headers).get('vary','').split(',')}:
+                        MutableHeaders(raw=headers).add_vary_header('Accept-Encoding')
+                policy=b'private, max-age=86400, immutable' if cacheable else b'private, no-store'
+                message={**message,'headers':headers+[(b'cache-control',policy),(b'x-frame-options',b'SAMEORIGIN')]}
             await send(message)
-        await self.app(scope,receive,protected_send)
+        if versioned_asset_request(scope) and accepts_gzip(scope):
+            await self.compressed_assets(scope,receive,protected_send)
+        else:
+            await self.app(scope,receive,protected_send)

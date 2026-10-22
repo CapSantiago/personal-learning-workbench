@@ -10,7 +10,7 @@ from uuid import uuid4
 
 import streamlit as st
 
-from . import backups, db, locking, storage, workspace
+from . import backups, db, locking, storage, workspace, ui_theme
 from .services import LearningService
 from .materials import MaterialService
 from .workbench import Workbench
@@ -25,12 +25,18 @@ TASK_TYPES={'assignment':'作业','lab':'实验','exam':'考试','preview':'预�
 TASK_STATES={'todo':'待开始','doing':'进行中','done':'已完成','cancelled':'已取消'}
 KNOWLEDGE={'not_started':'未学习','learning':'学习中','understood_not_applied':'已理解，尚不能独立应用','mastered':'已掌握'}
 MARKS={'bookmark':'书签','comment':'批注','important':'重点','question':'疑问'}
-PAGES=['今日学习','课程书架','任务管理','笔记','章节与知识点','课程管理','学期管理','资料管理','数据与备份','使用说明']
+PAGES=['今日学习','课程书架','任务管理','笔记','章节与知识点','课程管理','学期管理','资料管理','数据与备份','外观设置','使用说明']
 TZ=timezone(timedelta(hours=8))
 
 
 def private_site():
     return os.environ.get('PLW_PRIVATE_SITE')=='1'
+
+
+def interface_css(relative):
+    """One token palette for native UI and isolated reader/library components."""
+    folder=Path(__file__).parent
+    return (folder/'design_tokens.css').read_text(encoding='utf-8')+'\n'+ui_theme.theme_css(st.session_state.get('_plw_theme',ui_theme.DEFAULT))+(folder/relative).read_text(encoding='utf-8')
 
 
 def token(key):
@@ -57,13 +63,15 @@ def navigation(path):
     page=st.session_state.get('navigation','今日学习')
     if page not in PAGES:page='今日学习'
     with st.sidebar:
-        st.html('<div class="plw-brand">PLW</div><div class="plw-brand-sub">个人学习工作台</div>')
+        st.html('<div class="plw-brand-lockup"><span class="plw-brand-mark" aria-hidden="true"></span>'
+                '<div><div class="plw-brand"><span class="plw-wordmark" aria-hidden="true"></span><span class="plw-brand-name">PLW</span></div>'
+                '<div class="plw-brand-sub">个人学习工作台</div></div></div>')
         for label in PAGES[:4]:
             if label=='课程书架':
                 opened=st.session_state.setdefault('_shelf_nav_open',page=='课程书架')
-                st.button(label,key='nav_'+label,width='stretch',type='primary' if page==label else 'secondary',
-                          icon=':material/keyboard_arrow_down:' if opened else ':material/keyboard_arrow_right:',
-                          on_click=toggle_bookshelf,help='展开或收起课程列表')
+                with st.container(key='nav_item_bookshelf_'+('open' if opened else 'closed')):
+                    st.button(label,key='nav_'+label,width='stretch',type='primary' if page==label else 'secondary',
+                              on_click=toggle_bookshelf,help='展开或收起课程列表')
                 if opened:
                     with st.container(key='sidebar_course_list'):
                         courses=LearningService(path).list_courses()
@@ -80,12 +88,16 @@ def navigation(path):
                             destination='课程管理' if LearningService(path).list_semesters() else '学期管理'
                             st.button('去添加课程' if destination=='课程管理' else '先创建学期',key='sidebar_course_empty',on_click=navigate,args=(destination,))
                 continue
-            st.button(label,key='nav_'+label,width='stretch',type='primary' if page==label else 'secondary',on_click=navigate,args=(label,))
-        with st.expander('课程与设置',expanded=page in PAGES[4:]):
+            with st.container(key='nav_item_'+{'今日学习':'today','任务管理':'tasks','笔记':'notes'}[label]):
+                st.button(label,key='nav_'+label,width='stretch',type='primary' if page==label else 'secondary',on_click=navigate,args=(label,))
+        # Stable identity keeps the user's disclosure state when the course tree
+        # or current page changes, instead of closing it during navigation.
+        with st.expander('课程与设置',expanded=page in PAGES[4:],key='sidebar_settings'):
             for label in PAGES[4:]:
                 st.button(label,key='nav_'+label,width='stretch',type='primary' if page==label else 'secondary',on_click=navigate,args=(label,))
-        st.caption('私人学习库 · 课件可下载离线阅读' if private_site() else '本地保存 · 离线可用')
-        if private_site():st.link_button('退出登录','/plw-auth/logout',width='stretch')
+        with st.container(key='sidebar_footer'):
+            st.caption('私人学习库 · 课件可下载离线阅读' if private_site() else '本地保存 · 离线可用')
+            if private_site():st.link_button('退出登录','/plw-auth/logout',width='stretch')
     return page
 
 
@@ -233,12 +245,12 @@ def home(path):
             LEFT JOIN (SELECT edition_id,MAX(updated_at) updated_at FROM annotations WHERE deleted_at IS NULL GROUP BY edition_id) a ON a.edition_id=e.id
             WHERE m.deleted_at IS NULL AND (p.revision>0 OR a.edition_id IS NOT NULL) ORDER BY updated_at DESC''') if r['course_id'] in courses][:3]
     if recent:
-        for col,r in zip(st.columns(len(recent)),recent):
-            with col.container(border=True):
+        for index,(col,r) in enumerate(zip(st.columns(len(recent)),recent)):
+            with col.container(key='resume_card_'+r['edition_id']):
                 st.caption(courses[r['course_id']]['name'])
                 st.write('**'+r['name']+'**')
                 st.progress(r['page']/r['page_count'],text=f"上次读到第 {r['page']} / {r['page_count']} 页")
-                st.button('继续阅读',key='resume_'+r['edition_id'],type='primary',width='stretch',on_click=navigate,args=('课程书架',r['course_id'],r['material_id'],r['edition_id']))
+                st.button('继续阅读',key='resume_'+r['edition_id'],type='primary' if index==0 else 'secondary',width='stretch',on_click=navigate,args=('课程书架',r['course_id'],r['material_id'],r['edition_id']))
     else:
         with st.container(border=True):
             st.write('选一份课件开始阅读，下次可以从这里继续。')
@@ -253,10 +265,11 @@ def home(path):
             st.button('安排学习任务',on_click=navigate,args=('任务管理',))
             st.button('已完成任务',on_click=open_task_archive)
     with right:
-        st.subheader('我的课程')
-        for c in list(courses.values())[:4]:
-            st.button(c['name'],key='home_course_'+c['id'],width='stretch',on_click=navigate,args=('课程书架',c['id']))
-        st.button('管理课程',on_click=navigate,args=('课程管理',))
+        with st.container(key='home_courses'):
+            st.subheader('我的课程')
+            for c in courses.values():
+                st.button(c['name'],key='home_course_'+c['id'],width='stretch',on_click=navigate,args=('课程书架',c['id']))
+            st.button('管理课程',on_click=navigate,args=('课程管理',))
 
 
 def add_material(path,course_id,key='import'):
@@ -322,12 +335,45 @@ def reader_assets(origin):
     return ReaderAssets(origin)
 
 
+def device_downloads(path):
+    # Legacy standalone databases have no active dataset pointer or device library.
+    if locking.workspace_for(path) is None:return
+    assets=reader_assets(f"http://127.0.0.1:{st.get_option('server.port')}")
+    url=assets.register_library(path);folder=Path(__file__).with_name('reader')
+    with st.expander('此设备课件下载库'):
+        render=st.components.v2.component('plw_device_library',html='<div class="device-library"></div>',
+            css=interface_css('reader/library.css'),js=(folder/'library_ui.js').read_text(encoding='utf-8'))
+        render(key='device_library_'+path.parent.name,data={'base':assets.url,'run':path.parent.name,'manifest':url})
+
+
 def read_edition(path,edition):
     w=Workbench(path);identity=edition['id']
     state=w.edition_state(identity)
     material=MaterialService(path).get_material(edition['material_id'])
     assets=reader_assets(f"http://127.0.0.1:{st.get_option('server.port')}")
     assets.register(path,edition)
+    try:ocr_texts=OcrService(path).texts(identity)
+    except (ValueError,RuntimeError,OSError) as exc:
+        ocr_texts={};st.warning('OCR 文字暂不可用：'+str(exc))
+    reset_key='reader_reset_'+identity
+    folder=Path(__file__).with_name('reader')
+    render=st.components.v2.component('plw_reader',html='<div class="reader-root"></div>',css=interface_css('reader/reader.css'),js=(folder/'reader.js').read_text(encoding='utf-8'))
+    result=render(key='reader_'+identity,data={'base':assets.url,'run':path.parent.name,'doc':identity,'filename':material['name'],'pages':edition['page_count'],'bytes':edition['size_bytes'],'digest':edition['pdf_sha256'],'state':state,'ocr_texts':ocr_texts,'revision':state['revision'],'ack':st.session_state.get('reader_ack',''),'error':st.session_state.get('reader_error',''),'reset':st.session_state.get(reset_key,''),'goto':st.session_state.get('goto_'+identity)},on_action_change=lambda:None)
+    if result.action:
+        try:
+            w.reader_action(result.action)
+            st.session_state.reader_ack=result.action['id'];st.session_state.reader_error=''
+        except (*ERRORS,ValueError,KeyError,TypeError) as exc:
+            st.session_state.reader_error=str(exc)
+        st.rerun()
+    with st.expander('书签与批注',expanded=False):
+        annotation_panel(path,edition,state)
+
+
+def edition_tools(path,edition):
+    identity=edition['id'];state=Workbench(path).edition_state(identity)
+    material=MaterialService(path).get_material(edition['material_id'])
+    assets=reader_assets(f"http://127.0.0.1:{st.get_option('server.port')}")
     with st.expander('下载与离线阅读',key='downloads_'+identity):
         st.link_button('下载 PDF 到设备',assets.register_download(path,material,edition),width='stretch')
         if material['storage_mode']=='managed_copy' and not material['file_deleted_at']:
@@ -336,34 +382,19 @@ def read_edition(path,edition):
             else:st.link_button('下载原始课件',original_url,width='stretch')
         else:st.caption('原件使用外部路径引用；PDF 阅读副本可以独立下载。迁移网站前请导入完整原件。')
         st.caption('先下载并保存到手机或 iPad 的“文件”，之后断网可用 PDF 阅读器打开。此 PDF 为静态课件，不包含 PLW 标记；离线修改暂不自动同步。')
-    try:ocr_texts=OcrService(path).texts(identity)
-    except (ValueError,RuntimeError,OSError) as exc:
-        ocr_texts={};st.warning('OCR 文字暂不可用：'+str(exc))
-    st.caption(f"{edition['page_count']} 页 · 阅读进度与图形标记自动保存")
-    reset_key='reader_reset_'+identity
-    folder=Path(__file__).with_name('reader')
-    render=st.components.v2.component('plw_reader',html='<div class="reader-root"></div>',css=(folder/'reader.css').read_text(encoding='utf-8'),js=(folder/'reader.js').read_text(encoding='utf-8'))
-    result=render(key='reader_'+identity,data={'base':assets.url,'run':path.parent.name,'doc':identity,'pages':edition['page_count'],'state':state,'ocr_texts':ocr_texts,'revision':state['revision'],'ack':st.session_state.get('reader_ack',''),'error':st.session_state.get('reader_error',''),'reset':st.session_state.get(reset_key,''),'goto':st.session_state.get('goto_'+identity)},on_action_change=lambda:None)
-    if result.action:
-        try:
-            w.reader_action(result.action)
-            st.session_state.reader_ack=result.action['id'];st.session_state.reader_error=''
-        except (*ERRORS,ValueError,KeyError,TypeError) as exc:
-            st.session_state.reader_error=str(exc)
-        st.rerun()
     if not private_site():
         with st.expander('图片文字识别（OCR）',key='ocr_panel_'+identity):
-            ocr_panel(path,edition,state,ocr_texts)
+            try:texts=OcrService(path).texts(identity)
+            except (ValueError,RuntimeError,OSError) as exc:st.warning('OCR 文字暂不可用：'+str(exc))
+            else:ocr_panel(path,edition,state,texts)
     material=MaterialService(path).get_material(edition['material_id'])
     if not private_site() and Path(material['original_path']).suffix.lower() in ('.ppt','.pptx'):
         with st.expander('动画与视频',key='media_panel_'+identity):
             media_panel(path,edition,state,assets)
-    with st.expander('书签与批注',expanded=False):
-        annotation_panel(path,edition,state)
     with st.expander('阅读器维护'):
         st.caption(f"阅读副本创建于 {edition['created_at'][:10]}。标记只属于当前版本，原文件保持不变。")
         if st.button('重新载入阅读器',help='其他窗口修改后使用。尚未保存的图形会被放弃。'):
-            st.session_state[reset_key]=str(uuid4());st.session_state.pop('reader_error',None);st.rerun()
+            st.session_state['reader_reset_'+identity]=str(uuid4());st.session_state.pop('reader_error',None);st.rerun()
 
 
 def ocr_panel(path,edition,state,texts):
@@ -558,6 +589,11 @@ def course_removal_notice(path):
 
 
 def bookshelf(path):
+    with st.container(key='shelf_workspace'):
+        bookshelf_content(path)
+
+
+def bookshelf_content(path):
     # Keep restoration available even after the last visible course is removed.
     if '_course_order_error' in st.session_state:
         st.error(st.session_state.pop('_course_order_error'))
@@ -565,20 +601,23 @@ def bookshelf(path):
     course=course_picker(path,'shelf_course',show_selector=False)
     if not course:
         st.header('课程书架')
+        device_downloads(path)
         return
-    heading,options=st.columns([4,1],vertical_alignment='center')
-    with heading:st.header(course['name'])
+    with st.container(key='shelf_heading'):
+        with st.container(horizontal=True,vertical_alignment='top',key='shelf_title_row'):
+            st.header(course['name'])
+            options=st.popover('课程选项',width=132)
+        st.caption(' · '.join(v for v in (course['semester_name'],course['teacher']) if v))
     with options:
-        with st.popover('课程选项',width='stretch'):
-            course_order_controls(path,course['id'])
-            st.divider()
-            st.write('删除课程（可恢复）')
-            st.write(course['name'])
-            st.caption('从书架移除并归档此课程。课件文件、任务、笔记、阅读进度和标记继续保留，不删除磁盘文件。')
-            st.caption('可撤销；也可在“课程管理”勾选“显示已归档课程与学期”，再取消课程归档恢复。')
-            st.button('确认移除课程',key='remove_shelf_course_'+course['id'],
-                      on_click=set_shelf_course_archived,args=(path,course['id'],course['revision'],True))
-    st.caption(' · '.join(v for v in (course['semester_name'],course['teacher']) if v))
+        device_downloads(path)
+        course_order_controls(path,course['id'])
+        st.divider()
+        st.write('删除课程（可恢复）')
+        st.write(course['name'])
+        st.caption('从书架移除并归档此课程。课件文件、任务、笔记、阅读进度和标记继续保留，不删除磁盘文件。')
+        st.caption('可撤销；也可在“课程管理”勾选“显示已归档课程与学期”，再取消课程归档恢复。')
+        st.button('确认移除课程',key='remove_shelf_course_'+course['id'],
+                  on_click=set_shelf_course_archived,args=(path,course['id'],course['revision'],True))
     if st.session_state.get('_shelf_course_id')!=course['id']:
         st.session_state.shelf_query=''
         st.session_state.shelf_chapter=None
@@ -591,7 +630,9 @@ def bookshelf(path):
         st.session_state.shelf_chapter=None
         st.session_state.shelf_material=target['material']
         st.session_state.shelf_edition=target['edition']
-    material_column=st.container()
+    with st.container(horizontal=True,vertical_alignment='center',key='shelf_switcher'):
+        material_column=st.container(width='stretch')
+        tools=st.popover('课件工具',width=132)
     w=Workbench(path)
     removed=st.session_state.get('_last_removed_courseware')
     if removed and removed['course_id']==course['id']:
@@ -604,10 +645,11 @@ def bookshelf(path):
                 st.session_state.shelf_material=removed['id']
                 _done('课件已恢复到书架末尾。')
     all_materials=MaterialService(path).list_materials(course['id'])
-    with st.expander('导入课件',expanded=not all_materials or st.session_state.get('_import_report_course')==course['id']):add_material(path,course['id'],'shelf_import')
-    with st.expander('搜索与章节筛选'):
-        query=st.text_input('搜索课件',key='shelf_query')
-        chapter=chapter_picker(w,course['id'],'shelf_chapter')
+    with tools:
+        with st.expander('导入课件',expanded=not all_materials or st.session_state.get('_import_report_course')==course['id']):add_material(path,course['id'],'shelf_import')
+        with st.expander('搜索与章节筛选'):
+            query=st.text_input('搜索课件',key='shelf_query')
+            chapter=chapter_picker(w,course['id'],'shelf_chapter')
     permitted=set(w.associations('chapter',chapter)) if chapter else None
     all_courseware=MaterialService(path).list_courseware(course['id'])
     matching={r['id'] for r in MaterialService(path).list_materials(course['id'],query)}
@@ -621,56 +663,60 @@ def bookshelf(path):
                 return f"{item['name']} · {item['created_at'][:10]} · {identity[:6]}"
             return item['name']
         with material_column:
-            selected=st.selectbox('选择课件',list(items),format_func=material_label,key='shelf_material')
-            order_column,remove_column=st.columns([3,1])
-            with order_column:courseware_order_controls(path,course['id'],selected,all_courseware)
-            with remove_column:
-                with st.popover('移除课件',width='stretch'):
-                    st.write('从书架移除这份课件？')
-                    st.write(items[selected]['name'])
-                    st.caption('保留课件文件、阅读进度和标记。移除后可撤销，也可在资料管理中恢复。')
-                    if st.button('确认移除',key='remove_courseware_'+selected):
-                        MaterialService(path).set_deleted(selected,True)
-                        st.session_state._last_removed_courseware={key:items[selected][key] for key in ('id','course_id','name')}
-                        _done('课件已从书架移除。')
+            selected=st.selectbox('选择课件',list(items),format_func=material_label,key='shelf_material',label_visibility='collapsed')
+        with tools:
+            courseware_order_controls(path,course['id'],selected,all_courseware)
+            with st.expander('移除课件'):
+                st.write('从书架移除这份课件？')
+                st.write(items[selected]['name'])
+                st.caption('保留课件文件、阅读进度和标记。移除后可撤销，也可在资料管理中恢复。')
+                if st.button('确认移除',key='remove_courseware_'+selected):
+                    MaterialService(path).set_deleted(selected,True)
+                    st.session_state._last_removed_courseware={key:items[selected][key] for key in ('id','course_id','name')}
+                    _done('课件已从书架移除。')
         material=items[selected]
         editions=sorted([e for e in w.rows('reading_editions') if e['material_id']==selected],key=lambda e:e['created_at'],reverse=True)
         if editions:
             if len(editions)>1:
                 lookup={e['id']:e for e in editions}
                 if st.session_state.get('shelf_edition') not in lookup:st.session_state.shelf_edition=editions[0]['id']
-                with st.expander('选择其他阅读版本'):
-                    edition_id=st.selectbox('阅读版本',list(lookup),key='shelf_edition',format_func=lambda i:f"{lookup[i]['created_at'][:19]} · {lookup[i]['page_count']} 页 · {i[:6]}")
+                with tools:
+                    with st.expander('选择其他阅读版本'):
+                        edition_id=st.selectbox('阅读版本',list(lookup),key='shelf_edition',format_func=lambda i:f"{lookup[i]['created_at'][:19]} · {lookup[i]['page_count']} 页 · {i[:6]}")
                 edition=lookup[edition_id]
             else:
                 edition=editions[0]
+            with tools:edition_tools(path,edition)
             read_edition(path,edition)
         else:
-            st.info('这份课件还未准备阅读。下方生成阅读副本后，即可翻页和标记。')
-        with st.expander('课件详情'):
-            if not editions and material['storage_mode']=='managed_copy' and not material['file_deleted_at']:
-                assets=reader_assets(f"http://127.0.0.1:{st.get_option('server.port')}")
-                try:original_url=assets.register_download(path,material)
-                except (*ERRORS,ValueError):st.caption('原始课件暂不可下载，请检查文件状态或重新导入完整课件。')
-                else:st.link_button('下载原始课件',original_url,width='stretch')
-            if material['managed_relpath'] and Path(material['original_path'])==path.parent/material['managed_relpath']:
-                st.caption('通过文件选择导入 · 完整课件已保存在学习库')
-            elif not private_site():st.text(material['original_path'])
-            details=' · '.join(v for v in (course['teacher'],course['schedule_text'],course['assessment']) if v)
-            if details:st.caption(details)
-            if not private_site() and st.button('使用系统程序打开原格式'):
-                source=storage.relative_file(path.parent,material['managed_relpath'],True) if material['managed_relpath'] else storage.check_source(material['reference_path'],True,db_path=path)
-                os.startfile(source)
-        with st.expander('生成阅读副本 / 添加新版本',expanded=not editions):
-            st.write('保存独立的 PDF 阅读副本并纳入完整备份。可选择已从 PowerPoint 导出的 PDF，原课件和旧阅读版本继续保留。')
-            uploaded=st.file_uploader('选择已导出的 PDF',type=['pdf'],max_upload_size=200,key='manual_upload_'+selected)
-            confirmed=st.checkbox('确认保存 PDF 阅读副本' if private_site() else '确认生成并保存本地 PDF 阅读副本',key='copy_'+selected)
-            manual=None if private_site() else st.text_input('使用已导出的 PDF 路径（可选）',key='manual_'+selected)
-            if st.button('生成阅读副本',disabled=not confirmed):
-                with st.spinner('生成并校验静态页面，PPT 转换最多等待两分钟…'):
-                    w.create_edition(selected,str(uuid4()),local_copy_confirmed=confirmed,exported_pdf=manual or None,uploaded_pdf=uploaded.getvalue() if uploaded else None)
-                _done('阅读副本已保存，可以开始阅读和标记。')
-    else:st.info('此课程下暂无符合条件的 PPT/PDF。')
+            st.info('这份课件还未准备阅读。请打开“课件工具”生成阅读副本，即可翻页和标记。')
+        with tools:
+            with st.expander('课件详情'):
+                if not editions and material['storage_mode']=='managed_copy' and not material['file_deleted_at']:
+                    assets=reader_assets(f"http://127.0.0.1:{st.get_option('server.port')}")
+                    try:original_url=assets.register_download(path,material)
+                    except (*ERRORS,ValueError):st.caption('原始课件暂不可下载，请检查文件状态或重新导入完整课件。')
+                    else:st.link_button('下载原始课件',original_url,width='stretch')
+                if material['managed_relpath'] and Path(material['original_path'])==path.parent/material['managed_relpath']:
+                    st.caption('通过文件选择导入 · 完整课件已保存在学习库')
+                elif not private_site():st.text(material['original_path'])
+                details=' · '.join(v for v in (course['teacher'],course['schedule_text'],course['assessment']) if v)
+                if details:st.caption(details)
+                if not private_site() and st.button('使用系统程序打开原格式'):
+                    source=storage.relative_file(path.parent,material['managed_relpath'],True) if material['managed_relpath'] else storage.check_source(material['reference_path'],True,db_path=path)
+                    os.startfile(source)
+            with st.expander('生成阅读副本 / 添加新版本',expanded=not editions):
+                st.write('保存独立的 PDF 阅读副本并纳入完整备份。可选择已从 PowerPoint 导出的 PDF，原课件和旧阅读版本继续保留。')
+                uploaded=st.file_uploader('选择已导出的 PDF',type=['pdf'],max_upload_size=200,key='manual_upload_'+selected)
+                confirmed=st.checkbox('确认保存 PDF 阅读副本' if private_site() else '确认生成并保存本地 PDF 阅读副本',key='copy_'+selected)
+                manual=None if private_site() else st.text_input('使用已导出的 PDF 路径（可选）',key='manual_'+selected)
+                if st.button('生成阅读副本',disabled=not confirmed):
+                    with st.spinner('生成并校验静态页面，PPT 转换最多等待两分钟…'):
+                        w.create_edition(selected,str(uuid4()),local_copy_confirmed=confirmed,exported_pdf=manual or None,uploaded_pdf=uploaded.getvalue() if uploaded else None)
+                    _done('阅读副本已保存，可以开始阅读和标记。')
+    else:
+        with material_column:st.caption('尚无可阅读课件')
+        st.info('此课程下暂无符合条件的 PPT/PDF。请打开“课件工具”导入课件或调整筛选。')
 
 
 def tasks(path):
@@ -835,12 +881,33 @@ def materials(path):
         if st.button('核对未完成资料操作'):st.json(service.reconcile_operations())
 
 
+def appearance_settings(root):
+    st.header('外观设置')
+    st.caption('更改按钮、边框和选中提示的强调色。页面与侧栏背景保持不变。')
+    current=st.session_state.get('_plw_theme',ui_theme.DEFAULT)
+    if st.session_state.get('_theme_choice_loaded')!=current:
+        st.session_state.theme_choice=current
+        st.session_state._theme_choice_loaded=current
+    with st.form('appearance_settings'):
+        selected=st.selectbox('主题强调色',list(ui_theme.PALETTES),format_func=lambda k:ui_theme.PALETTES[k]['label'],key='theme_choice')
+        st.caption('保存到网站后会长期沿用。电脑和 iPad 刷新或重新打开后使用同一设置。')
+        if st.form_submit_button('保存主题颜色',type='primary'):
+            ui_theme.save_theme(root,selected)
+            _done('主题强调色已更新。')
+    if st.button('恢复默认绿色',disabled=current==ui_theme.DEFAULT):
+        ui_theme.save_theme(root,ui_theme.DEFAULT)
+        _done('已恢复默认绿色。')
+
+
 def main():
     root=Path(os.environ.get('PLW_WORKSPACE',str(storage.PRODUCTION_ROOT)))
     storage.safe_path(root,directory=True)
     st.set_page_config(page_title='PLW · 个人学习工作台',page_icon='📘',layout='wide')
     st.set_option('client.toolbarMode','minimal')
-    st.html('<style>'+Path(__file__).with_name('workbench.css').read_text(encoding='utf-8')+'</style>')
+    try:theme=ui_theme.load_theme(root);theme_warning=None
+    except (storage.StorageError,OSError,ValueError,TypeError):theme=ui_theme.DEFAULT;theme_warning='主题设置暂不可用，已使用默认绿色；可在“外观设置”重新保存。'
+    st.session_state._plw_theme=theme
+    st.html('<style>'+interface_css('workbench.css')+'</style>')
     if not (root/'control/active.json').exists():
         st.sidebar.header('PLW')
         st.sidebar.caption('个人学习工作台')
@@ -857,6 +924,7 @@ def main():
     path=workspace.active_db(root)
     if st.session_state.get('dataset') not in (None,path.parent.name):
         st.session_state.clear()
+    st.session_state._plw_theme=theme
     st.session_state.dataset=path.parent.name
     with closing_snapshot(path) as c:version=c.execute('PRAGMA user_version').fetchone()[0]
     if not db.schema_ready(version):
@@ -869,6 +937,7 @@ def main():
     # Keep the page's element positions stable when a one-shot notice appears
     # or disappears; otherwise nested panels collapse during uploads/reruns.
     with st.container(key='plw_notices'):
+        if theme_warning:st.warning(theme_warning)
         for key in ('_m2_notice','flash'):
             if key in st.session_state:st.success(st.session_state.pop(key))
         if '_task_action_error' in st.session_state:st.error(st.session_state.pop('_task_action_error'))
@@ -884,6 +953,7 @@ def main():
     elif page=='课程管理':_courses_page(LearningService(path))
     elif page=='学期管理':_semesters_page(LearningService(path))
     elif page=='资料管理':materials(path)
+    elif page=='外观设置':appearance_settings(root)
     elif page=='数据与备份':
         _backups_page(root,path)
         if not private_site():

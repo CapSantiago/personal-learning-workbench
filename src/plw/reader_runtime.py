@@ -1,7 +1,8 @@
-"""Local PDF tools and a capability-scoped, read-only asset server."""
+"""Local PDF tools, scoped assets, and independent reader action saves."""
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hashlib
+import gzip
 import json
 import os
 import sys
@@ -61,6 +62,19 @@ def reader_routes():
             return Response(status_code=404)
         headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
                  'Referrer-Policy':'no-referrer','Cross-Origin-Resource-Policy':'same-origin'}
+        if request.path_params['resource'].startswith('library/'):
+            status,manifest=owner.library_resource(request.path_params['resource'])
+            from starlette.responses import JSONResponse
+            return JSONResponse(manifest,status_code=status,headers=headers)
+        if request.path_params['resource'].startswith('pdf/'):
+            status,file=owner.pdf_resource(request.path_params['resource'])
+            if status!=200:return Response(status_code=status,headers=headers)
+            # Streamlit's internal gzip layer otherwise compresses the initial
+            # 200 discovery response and strips Content-Length. PDF.js then
+            # disables ranges even though this endpoint supports 206. Explicit
+            # identity also keeps the byte representation stable for ranges.
+            return FileResponse(file,media_type='application/pdf',
+                                headers={**headers,'Content-Encoding':'identity'})
         if request.path_params['resource'].startswith('media/'):
             status,file,mime=owner.media_resource(request.path_params['resource'])
             if status!=200:return Response(status_code=status,headers=headers)
@@ -68,14 +82,49 @@ def reader_routes():
         if request.path_params['resource'].startswith('download/'):
             status,record=owner.download_resource(request.path_params['resource'])
             if status!=200:return Response(status_code=status,headers=headers)
+            headers['Content-Encoding']='identity'
             return FileResponse(record['file'],media_type=record['mime'],filename=record['filename'],headers=headers)
         status, data, mime = owner._resource(request.path_params['resource'])
-        return Response(data, status_code=status, media_type=mime, headers={
-            'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
-            'Referrer-Policy': 'no-referrer', 'Cross-Origin-Resource-Policy': 'same-origin',
-        })
+        # Only verified, bundled vendor code is compressed. PDF byte ranges,
+        # learning media and downloads retain their exact representation.
+        if (status==200 and (request.path_params['resource'].startswith('vendor/') or request.path_params['resource'] in ('device-library.mjs','reader-module.mjs'))
+                and mime in ('text/javascript','text/css','application/wasm')):
+            from .private_assets import accepts_gzip
+            headers['Vary']='Accept-Encoding'
+            # Own the representation here so Streamlit's outer compressor
+            # cannot override an explicit gzip;q=0 or HEAD/range decision.
+            headers['Content-Encoding']='identity'
+            if len(data)>=1024 and accepts_gzip(request.scope):
+                data=gzip.compress(data,compresslevel=5,mtime=0)
+                headers['Content-Encoding']='gzip'
+        return Response(data,status_code=status,media_type=mime,headers=headers)
 
-    return [Route('/plw-reader/{token}/{resource:path}', resource, methods=['GET'])]
+    async def action(request):
+        from starlette.responses import JSONResponse
+        from starlette.concurrency import run_in_threadpool
+        headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
+        # A JSON POST, explicit matching Origin and unguessable capability are
+        # required in addition to the existing whole-app authentication gate.
+        try:
+            if (request.headers.get('sec-fetch-site')=='cross-site'
+                    or _origin(request.headers.get('origin',''))!=_origin(str(request.base_url))):
+                return JSONResponse({'error':'保存来源无效'},status_code=403,headers=headers)
+            if request.headers.get('content-type','').split(';')[0].strip().lower()!='application/json':
+                return JSONResponse({'error':'保存格式无效'},status_code=415,headers=headers)
+            with _readers_lock:owner=_readers.get(request.path_params['token'])
+            if owner is None:return JSONResponse({'error':'阅读器已过期，请重新打开'},status_code=404,headers=headers)
+            body=bytearray()
+            async for chunk in request.stream():
+                body.extend(chunk)
+                if len(body)>200_000:return JSONResponse({'error':'标记数据过大'},status_code=413,headers=headers)
+            value=json.loads(body)
+        except (ValueError,UnicodeError):
+            return JSONResponse({'error':'保存请求无效'},status_code=400,headers=headers)
+        status,result=await run_in_threadpool(owner.save_action,request.path_params['doc'],value)
+        return JSONResponse(result,status_code=status,headers=headers)
+
+    return [Route('/plw-reader/{token}/action/{doc}',action,methods=['POST']),
+            Route('/plw-reader/{token}/{resource:path}', resource, methods=['GET'])]
 
 
 def inspect_pdf(path):
@@ -101,6 +150,7 @@ class ReaderAssets:
         self.documents={}
         self.media={}
         self.downloads={}
+        self.libraries={}
         self.lock=threading.RLock()
         self.vendor=json.loads((ASSETS/'manifest.json').read_text(encoding='utf-8'))
         self.server=None
@@ -123,12 +173,16 @@ class ReaderAssets:
                 path=urlsplit(self.path).path
                 if not path.startswith(prefix): self.send_error(404);return
                 rel=path[len(prefix):]
+                if rel.startswith('library/'):
+                    status,manifest=owner.library_resource(rel);body=json.dumps(manifest,ensure_ascii=False).encode()
+                    self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)))
+                    self.send_header('Cache-Control','no-store');self.send_header('Access-Control-Allow-Origin',origin);self.end_headers();self.wfile.write(body);return
                 if rel.startswith('download/'):
                     if self.headers.get('Sec-Fetch-Site')=='cross-site':self.send_error(403);return
                     status,record=owner.download_resource(rel)
                     if status!=200:self.send_error(status);return
                     self.send_response(200)
-                    self.send_header('Content-Type',record['mime']);self.send_header('Content-Length',str(record['size']))
+                    self.send_header('Content-Type',record['mime']);self.send_header('Content-Length',str(record['size']));self.send_header('Content-Encoding','identity')
                     self.send_header('Content-Disposition',"attachment; filename*=UTF-8''"+quote(record['filename']))
                     self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
                     self.end_headers()
@@ -183,21 +237,35 @@ class ReaderAssets:
                     raise ValueError('Invalid asset')
                 data=file.read_bytes()
                 if hashlib.sha256(data).hexdigest()!=self.vendor[entry]: raise ValueError('Asset changed')
-            elif rel.startswith('pdf/') and rel.endswith('.pdf'):
-                key=rel[4:-4]
-                with self.lock: record=self.documents.get(key)
-                if not record: return 404,b'',None
-                database,file,digest=record
-                root=locking.workspace_for(database)
-                if root and workspace.active_db(root)!=database: return 410,b'',None
-                storage.safe_path(file,must_exist=True,directory=False)
+            elif rel in ('device-library.mjs','reader-module.mjs'):
+                file=Path(__file__).with_name('reader')/('device_library.js' if rel=='device-library.mjs' else 'reader.js')
                 data=file.read_bytes()
-                if hashlib.sha256(data).hexdigest()!=digest: raise ValueError('Reading PDF changed')
+            elif rel.startswith('pdf/') and rel.endswith('.pdf'):
+                status,file=self.pdf_resource(rel)
+                if status!=200:return status,b'',None
+                data=file.read_bytes()
+                with self.lock:record=self.documents.get(rel[4:-4])
+                if not record or hashlib.sha256(data).hexdigest()!=record[2]:
+                    raise ValueError('Reading PDF changed')
             else: return 404,b'',None
             mime={'.mjs':'text/javascript','.js':'text/javascript','.pdf':'application/pdf','.wasm':'application/wasm','.css':'text/css'}.get(file.suffix,'application/octet-stream')
             return 200,data,mime
         except (OSError,ValueError,RuntimeError):
             return 409,b'',None
+
+    def pdf_resource(self,rel):
+        """Resolve only a registered, unchanged PDF before serving any range."""
+        if not rel.startswith('pdf/') or not rel.endswith('.pdf'):return 404,None
+        with self.lock:record=self.documents.get(rel[4:-4])
+        if not record:return 404,None
+        try:
+            database,file,digest=record
+            root=locking.workspace_for(database)
+            if root and workspace.active_db(root)!=database:return 410,None
+            storage.safe_path(file,must_exist=True,directory=False)
+            if storage.hash_file(file)[1]!=digest:raise ValueError('Reading PDF changed')
+            return 200,file
+        except (OSError,ValueError,RuntimeError):return 409,None
 
     def register(self,path,edition):
         file=storage.relative_file(Path(path).parent,edition['pdf_relpath'],must_exist=True)
@@ -205,7 +273,70 @@ class ReaderAssets:
         with self.lock:
             self.documents[edition['id']]=(Path(path),file,edition['pdf_sha256'])
 
-    def register_download(self,path,material,edition=None):
+    def save_action(self,identity,action):
+        with self.lock:record=self.documents.get(identity)
+        if not record:return 404,{'error':'阅读版本未注册，请重新打开'}
+        database=record[0]
+        try:
+            root=locking.workspace_for(database)
+            if not root or workspace.active_db(root)!=database:return 410,{'error':'学习库已切换，请重新打开'}
+            if not isinstance(action,dict) or action.get('doc')!=identity or action.get('run')!=database.parent.name:
+                return 400,{'error':'阅读版本不匹配'}
+            from .workbench import Workbench
+            workbench=Workbench(database)
+            # The same idempotency IDs, revision checks and data locks as the UI
+            # path remain in force. No PDF rehash, Streamlit trigger or rerun.
+            with locking.write_barrier(database):
+                workbench.reader_action(action)
+                state=workbench.edition_state(identity)
+            return 200,{'ack':action['id'],'state':state}
+        except (ValueError,KeyError,TypeError) as error:
+            return 409,{'error':str(error)}
+        except (OSError,RuntimeError):
+            return 503,{'error':'保存暂不可用，请重试；当前阅读不受影响'}
+
+    def register_library(self,path):
+        database=Path(path);root=locking.workspace_for(database)
+        if not root or workspace.active_db(root)!=database:raise ValueError('学习库已切换，请重新打开')
+        with self.lock:self.libraries[database.parent.name]=database
+        return self.url+'/library/'+database.parent.name+'.json'
+
+    def library_resource(self,rel):
+        run=rel[8:-5] if rel.startswith('library/') and rel.endswith('.json') else ''
+        with self.lock:database=self.libraries.get(run)
+        if database is None:return 404,{'error':'下载库不存在'}
+        root=locking.workspace_for(database)
+        if not root or workspace.active_db(root)!=database:return 410,{'error':'学习库已切换，请重新打开'}
+        files=[];unavailable=[]
+        with db.transaction(database,write=False) as connection:
+            materials=[dict(row) for row in connection.execute('''SELECT m.*,c.name AS course_name,s.name AS semester_name
+                FROM materials m JOIN courses c ON c.id=m.course_id JOIN semesters s ON s.id=c.semester_id
+                WHERE m.deleted_at IS NULL AND m.import_state='ready'
+                ORDER BY s.name,c.name,m.position,m.id''')]
+            editions={}
+            for row in connection.execute('SELECT * FROM reading_editions ORDER BY created_at DESC,id DESC'):
+                editions.setdefault(row['material_id'],dict(row))
+        for material in materials:
+            candidates=[]
+            if material['id'] in editions:candidates.append(('pdf',editions[material['id']]))
+            if (material['storage_mode']=='managed_copy' and not material['file_deleted_at']
+                    and Path(material['managed_relpath']).suffix.lower() in ('.pdf','.ppt','.pptx')):
+                candidates.append(('original',None))
+            for kind,edition in candidates:
+                try:
+                    # Enumerating the library must not hash every large file.
+                    # Actual GET/Range still verifies the full file before serving.
+                    url=self.register_download(database,material,edition,_verify=False)
+                    with self.lock:record=self.downloads[url.rsplit('/',1)[1]]
+                    files.append(dict(id=edition['id'] if edition else material['id'],kind=kind,
+                        material=material['id'],filename=record['filename'],bytes=record['size'],
+                        digest=record['digest'],mime=record['mime'],url=url,
+                        course=material['course_name'],semester=material['semester_name']))
+                except (OSError,ValueError,RuntimeError):
+                    unavailable.append(dict(filename=material['name'],kind=kind,message='服务器文件暂不可用，请在资料管理中检查'))
+        return 200,dict(run=run,files=files,unavailable=unavailable)
+
+    def register_download(self,path,material,edition=None,*,_verify=True):
         """Only managed originals or verified reading snapshots; never a client path."""
         import re
         database=Path(path)
@@ -223,7 +354,7 @@ class ReaderAssets:
             mime={'.pdf':'application/pdf','.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','.ppt':'application/vnd.ms-powerpoint'}.get(suffix,'application/octet-stream')
             identity=material['id']
         file=storage.relative_file(database.parent,rel,True)
-        if storage.hash_file(file)!=(size,digest):raise ValueError('课件校验失败，已停止下载。')
+        if file.stat().st_size!=size or _verify and storage.hash_file(file)!=(size,digest):raise ValueError('课件校验失败，已停止下载。')
         name=re.sub(r'[\x00-\x1f<>:"/\\|?*]','_',Path(material['name']).stem).strip(' .')[:140] or '课件'
         record=dict(database=database,file=file,size=size,digest=digest,mime=mime,filename=name+suffix,material=material['id'])
         key=hashlib.sha256((str(database)+identity+digest).encode()).hexdigest()

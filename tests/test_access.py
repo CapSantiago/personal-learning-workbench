@@ -1,6 +1,8 @@
 """Same-origin reader boundaries; no real learning files or network exposure."""
 import asyncio
+import gzip
 import hashlib
+import time
 from pathlib import Path
 from uuid import uuid4
 from urllib.error import HTTPError
@@ -8,6 +10,7 @@ from urllib.request import Request, urlopen
 
 import pytest
 from starlette.applications import Starlette
+from streamlit.web.server.starlette.starlette_app import create_streamlit_middleware
 
 from plw import reader_runtime as readers, storage, workspace
 
@@ -70,6 +73,105 @@ def test_same_origin_vendor_is_served_with_correct_javascript_type(reader):
     status,headers,body=request(app,owner.url+'/vendor/build/pdf.mjs')
     assert status==200 and headers[b'content-type'].startswith(b'text/javascript')
     assert hashlib.sha256(body).hexdigest()==owner.vendor['build/pdf.mjs']
+
+
+@pytest.mark.parametrize('name',['legacy/build/pdf.mjs','legacy/build/pdf.worker.mjs'])
+def test_legacy_reader_and_worker_remain_verified_private_assets(reader,name):
+    from plw.private_auth import COOKIE, PrivateAccess, Session
+    app,owner,*_=reader
+    gate=PrivateAccess(app,username='synthetic',origin='https://plw.example',
+                       password_digest='scrypt$'+'00'*16+'$'+'00'*64)
+    gate.sessions['synthetic']=Session(time.monotonic()+60,'csrf',asyncio.Event())
+    url=owner.url+'/vendor/'+name
+    headers=[(b'x-forwarded-proto',b'https'),(b'accept-encoding',b'gzip')]
+    assert request(gate,url,extra_headers=headers)[0]==401
+    auth=headers+[(b'cookie',f'{COOKIE}=synthetic'.encode())]
+    status,response,body=request(gate,url,origin='https://plw.example',extra_headers=auth)
+    assert status==200 and response[b'content-encoding']==b'gzip'
+    assert response[b'content-type'].startswith(b'text/javascript')
+    assert response[b'cache-control']==b'private, no-store'
+    assert hashlib.sha256(gzip.decompress(body)).hexdigest()==owner.vendor[name]
+    assert request(gate,url,fetch_site='cross-site',extra_headers=auth)[0]==403
+    owner.vendor[name]='0'*64
+    assert request(gate,url,origin='https://plw.example',extra_headers=auth)[0]==409
+
+
+def test_pdf_ranges_head_and_invalid_range_preserve_private_response(reader):
+    app,owner,_,_,edition,payload=reader
+    url=pdf_url(owner,edition)
+    status,headers,body=request(app,url,method='HEAD')
+    assert status==200 and body==b''
+    assert int(headers[b'content-length'])==len(payload)
+    assert headers[b'accept-ranges']==b'bytes'
+    for interval,expected in [(b'bytes=0-7',payload[:8]),(b'bytes=-5',payload[-5:])]:
+        status,headers,body=request(app,url,extra_headers=[(b'range',interval),(b'accept-encoding',b'gzip')])
+        assert status==206 and body==expected
+        assert b'content-range' in headers and headers.get(b'content-encoding',b'identity')==b'identity'
+        assert headers[b'cache-control']==b'no-store'
+    assert request(app,url,extra_headers=[(b'range',b'bytes=99999-')])[0]==416
+
+
+def test_pdf_discovery_keeps_length_with_actual_streamlit_middleware(reader):
+    _,owner,database,file,edition,_=reader
+    payload=b'%PDF-1.7\n'+bytes(range(256))*1024+b'\n%%EOF'
+    file.write_bytes(payload)
+    owner.documents[edition['id']]=(database,file,hashlib.sha256(payload).hexdigest())
+    app=Starlette(routes=readers.reader_routes(),middleware=create_streamlit_middleware())
+    url=pdf_url(owner,edition)
+    status,headers,body=request(app,url,extra_headers=[(b'accept-encoding',b'gzip')])
+    assert status==200 and body==payload
+    assert headers.get(b'content-encoding',b'identity')==b'identity'
+    assert int(headers[b'content-length'])==len(payload)
+    assert headers[b'accept-ranges']==b'bytes'
+
+
+def test_range_cannot_bypass_content_or_dataset_checks(reader,monkeypatch):
+    app,owner,database,file,edition,payload=reader
+    url=pdf_url(owner,edition);extra=[(b'range',b'bytes=0-7')]
+    file.write_bytes(b'x'*len(payload))
+    assert request(app,url,extra_headers=extra)[0]==409
+    file.write_bytes(payload)
+    monkeypatch.setattr(workspace,'active_db',lambda root:database.with_name('different.sqlite3'))
+    assert request(app,url,extra_headers=extra)[0]==410
+
+
+def test_reader_code_compresses_only_verified_vendor_and_honors_refusal(reader):
+    app,owner,*_=reader
+    url=owner.url+'/vendor/build/pdf.worker.mjs'
+    status,headers,plain=request(app,url)
+    assert status==200 and headers.get(b'content-encoding',b'identity')==b'identity'
+    status,headers,body=request(app,url,extra_headers=[(b'accept-encoding',b'gzip')])
+    assert status==200 and headers[b'content-encoding']==b'gzip'
+    assert gzip.decompress(body)==plain and len(body)<len(plain)*.5
+    assert headers[b'cache-control']==b'no-store' and headers[b'vary']==b'Accept-Encoding'
+    for encoding in (b'gzip;q=0, br',b'br',b'gzip;q=invalid'):
+        status,headers,body=request(app,url,extra_headers=[(b'accept-encoding',encoding)])
+        assert status==200 and body==plain and headers.get(b'content-encoding',b'identity')==b'identity'
+    owner.vendor['build/pdf.worker.mjs']='0'*64
+    status,headers,body=request(app,url,extra_headers=[(b'accept-encoding',b'gzip')])
+    assert status==409 and b'content-encoding' not in headers
+
+
+def test_https_proxy_pdf_ranges_still_require_live_login_and_same_origin(reader):
+    from plw.private_auth import COOKIE, PrivateAccess, Session
+    app,owner,_,_,edition,payload=reader
+    gate=PrivateAccess(app,username='synthetic',origin='https://plw.example',
+                       password_digest='scrypt$'+'00'*16+'$'+'00'*64)
+    gate.sessions['synthetic']=Session(time.monotonic()+60,'csrf',asyncio.Event())
+    base=[(b'x-forwarded-proto',b'https'),(b'range',b'bytes=0-7'),(b'accept-encoding',b'gzip')]
+    auth=base+[(b'cookie',f'{COOKIE}=synthetic'.encode())]
+    url=pdf_url(owner,edition)
+    assert request(gate,url,extra_headers=base)[0]==401
+    status,headers,body=request(gate,url,origin='https://plw.example',extra_headers=auth)
+    assert status==206 and body==payload[:8]
+    assert headers[b'cache-control']==b'private, no-store' and headers.get(b'content-encoding',b'identity')==b'identity'
+    assert request(gate,url,origin='https://other.example',extra_headers=auth)[0]==403
+    assert request(gate,url,fetch_site='cross-site',extra_headers=auth)[0]==403
+    vendor=owner.url+'/vendor/build/pdf.worker.mjs'
+    assert request(gate,vendor,extra_headers=base)[0]==401
+    assert request(gate,vendor,fetch_site='cross-site',extra_headers=auth)[0]==403
+    gate.sessions.clear()
+    assert request(gate,url,extra_headers=auth)[0]==401
 
 
 @pytest.mark.parametrize('suffix',[

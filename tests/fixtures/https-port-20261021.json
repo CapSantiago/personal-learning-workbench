@@ -1,0 +1,12 @@
+{
+  "ss_tcp_all_listeners": {
+    "exit": 0,
+    "stdout": "LISTEN 0      4096                 100.104.174.9%tailscale0:443   0.0.0.0:* users:((\"tailscaled\",pid=832,fd=28))                   \nLISTEN 0      4096                               127.0.0.54:53    0.0.0.0:* users:((\"systemd-resolve\",pid=480,fd=17))              \nLISTEN 0      4096                            127.0.0.53%lo:53    0.0.0.0:* users:((\"systemd-resolve\",pid=480,fd=15))              \nLISTEN 0      4096                                  0.0.0.0:22    0.0.0.0:* users:((\"sshd\",pid=1737,fd=3),(\"systemd\",pid=1,fd=170))\nLISTEN 0      2048                                127.0.0.1:8501  0.0.0.0:* users:((\"python\",pid=368878,fd=4))                     \nLISTEN 0      4096                 100.104.174.9%tailscale0:59977 0.0.0.0:* users:((\"tailscaled\",pid=832,fd=22))                   \nLISTEN 0      4096   [fd7a:115c:a1e0::df01:aee3]%tailscale0:37248    [::]:* users:((\"tailscaled\",pid=832,fd=23))                   \nLISTEN 0      4096   [fd7a:115c:a1e0::df01:aee3]%tailscale0:443      [::]:* users:((\"tailscaled\",pid=832,fd=29))                   \nLISTEN 0      4096                                     [::]:22       [::]:* users:((\"sshd\",pid=1737,fd=4),(\"systemd\",pid=1,fd=171))\n",
+    "stderr": ""
+  },
+  "tailscaled_service": {
+    "exit": 0,
+    "stdout": "MainPID=832\nExecMainPID=832\nActiveState=active\n",
+    "stderr": ""
+  }
+}

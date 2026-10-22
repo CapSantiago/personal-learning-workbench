@@ -1,45 +1,142 @@
-/* Local, system-font UI. Streamlit primitives keep their native keyboard behavior. */
-:root { --plw-ink:#243b35; --plw-muted:#64756f; --plw-accent:#25665c; }
-[data-testid="stAppViewContainer"] {background:#f6f8f6;color:var(--plw-ink);}
-[data-testid="stMainBlockContainer"] {max-width:1240px;padding:2rem 2.5rem 4rem;}
+/* Presentation only. Native widgets retain labels and keyboard behavior. */
+html, body, [data-testid="stApp"] {font-family:var(--plw-font);color:var(--plw-ink);}
+[data-testid="stAppViewContainer"] {background:var(--plw-bg);color:var(--plw-ink);}
+[data-testid="stMainBlockContainer"] {max-width:1240px;padding:2rem 2rem 3rem;}
 [data-testid="stHeader"] {background:transparent;}
-[data-testid="stSidebar"] {background:#edf2ee;border-right:1px solid #dce5de;}
-[data-testid="stSidebarContent"] {padding-top:1.5rem;}
-[data-testid="stSidebar"] [data-testid="stButton"] button {justify-content:flex-start;border-radius:9px;min-height:42px;}
+[data-testid="stMain"] p, [data-testid="stSidebar"] p {line-height:1.6;overflow-wrap:anywhere;}
+[data-testid="stHeading"] h1, [data-testid="stHeading"] h2, [data-testid="stHeading"] h3 {font-family:var(--plw-font);color:var(--plw-ink);letter-spacing:-.02em;line-height:1.3;}
+[data-testid="stHeading"] h2 {font-size:1.75rem;padding-bottom:.25rem;}
+[data-testid="stHeading"] h3 {font-size:1.125rem;padding-bottom:.25rem;}
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p, .stCaption, .stCaption p {color:var(--plw-muted)!important;font-size:.875rem;}
+[data-testid="stWidgetLabel"] p {font-size:.875rem;color:var(--plw-ink);}
+[data-testid="stMarkdownContainer"], [data-testid="stText"] {color:var(--plw-ink);}
+[data-testid="stMarkdownContainer"], [data-testid="stCaptionContainer"], [data-testid="stWidgetLabel"], [data-testid="stMain"] input, [data-testid="stMain"] textarea {font-family:var(--plw-font);}
+[data-testid="stText"] {white-space:pre-wrap;overflow-wrap:anywhere;}
+
+/* Quiet navigation, with courses as a subordinate level. */
+[data-testid="stSidebar"] {background:var(--plw-sidebar);border-right:1px solid var(--plw-line);}
+[data-testid="stSidebarContent"] {padding:0;}
+[data-testid="stSidebarHeader"] {height:40px;min-height:40px;width:100%;box-sizing:border-box;padding:.25rem 1rem 0;margin:0 0 8px;}
+[data-testid="stSidebarUserContent"] {width:100%;box-sizing:border-box;padding:.25rem 1.25rem 1.25rem;}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {gap:.65rem;}
+[data-testid="stSidebar"] [data-testid="stButton"] button {justify-content:flex-start;min-height:42px;text-align:left;border-radius:var(--plw-radius);}
 [data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"] {background:transparent;border-color:transparent;}
-[data-testid="stSidebar"] [data-testid="stButton"] button:hover {background:#dfe9e2;}
-[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] {background:#25665c;border-color:#25665c;color:white;}
-.st-key-sidebar_course_list {margin:0 0 .5rem .75rem;padding-left:.65rem;border-left:2px solid #d1e0d7;}
-[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button {min-height:36px;text-align:left;}
-[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button[kind="primary"] {background:#dbeae2;border-color:transparent;color:#205c51;font-weight:600;}
-h1,h2,h3 {letter-spacing:-.025em;color:var(--plw-ink);}
-h2 {font-size:1.65rem!important;} h3 {font-size:1.12rem!important;}
-[data-testid="stCaptionContainer"],[data-testid="stCaptionContainer"] p {color:var(--plw-muted);}
-[data-testid="stVerticalBlockBorderWrapper"]>div {border-color:#e0e7e2!important;border-radius:13px!important;}
-[data-testid="stForm"],[data-testid="stExpander"] {background:white;border-color:#e0e7e2;border-radius:12px;}
-[data-testid="stMetric"] {background:white;border:1px solid #e0e7e2;border-radius:12px;padding:14px 18px;}
+[data-testid="stSidebar"] [data-testid="stButton"] button:hover {background:var(--plw-accent-soft);color:var(--plw-accent-ink);}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] {background:var(--plw-accent-soft);border-color:transparent;color:var(--plw-accent-ink);font-weight:650;box-shadow:inset 3px 0 var(--plw-accent);}
+[data-testid="stSidebar"] [data-testid="stButton"] button>div, [data-testid="stSidebar"] [data-testid="stButton"] button [data-has-shortcut] {justify-content:flex-start;width:100%;}
+[data-testid="stSidebar"] [data-testid="stButton"] button p {line-height:1.45;white-space:normal;}
+.st-key-sidebar_course_list {margin:0 0 .5rem .5rem;padding-left:.65rem;border-left:1px solid var(--plw-control);}
+[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button {min-height:38px;}
+[data-testid="stSidebar"] .st-key-sidebar_course_list [data-testid="stButton"] button[kind="primary"] {background:var(--plw-surface);border-color:transparent;color:var(--plw-accent-ink);font-weight:600;box-shadow:none;}
+.plw-brand-lockup {display:flex;align-items:center;gap:12px;padding:8px 4px 20px;margin-bottom:8px;border-bottom:1px solid var(--plw-line);font-family:var(--plw-font);}
+.plw-brand-mark {display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:11px;background:var(--plw-accent);color:var(--plw-accent-text);}
+.plw-brand-mark::before {content:"";width:22px;height:22px;background:currentColor;mask-size:contain;mask-repeat:no-repeat;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5.5C9.5 4 6.5 4 3 4.5v14c3.5-.5 6.5-.5 9 1 2.5-1.5 5.5-1.5 9-1v-14c-3.5-.5-6.5-.5-9 1ZM12 5.5v14M6.5 8h2M6.5 11h2M15.5 8h2M15.5 11h2'/%3E%3C/svg%3E");}
+.plw-brand {position:relative;display:flex;align-items:center;height:31px;color:var(--plw-ink);margin:0;}
+.plw-wordmark {display:block;width:82px;height:31px;background:currentColor;mask-repeat:no-repeat;mask-size:contain;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 88 32' fill='none' stroke='black' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 28V4h10c12 0 12 14 0 14H3M32 4v24h16M55 4l6.5 24 7-17 7 17L82 4'/%3E%3C/svg%3E");}
+.plw-brand-name {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+.plw-brand-sub {font-size:.75rem;line-height:1.6;color:var(--plw-muted);margin:2px 0 0;}
+.st-key-sidebar_footer {margin-top:16px;padding-top:12px;border-top:1px solid var(--plw-line);}
+.st-key-sidebar_footer [data-testid="stCaptionContainer"] p {font-size:.75rem;}
+.st-key-sidebar_footer [data-testid="stLinkButton"] a {justify-content:flex-start;background:transparent;border-color:transparent;color:var(--plw-muted);}
+.plw-eyebrow {font-size:.8125rem;color:var(--plw-muted);margin:0 0 .25rem;}
+.plw-empty {padding:1rem 0;color:var(--plw-muted);}
+
+/* Surfaces group content; boundaries do not compete with headings. */
+[data-testid="stVerticalBlockBorderWrapper"]>div {border-color:var(--plw-line)!important;border-radius:12px!important;}
+[data-testid="stForm"] {background:var(--plw-surface);border-color:var(--plw-line);border-radius:12px;}
+[data-testid="stExpander"] {border-color:var(--plw-line);border-radius:var(--plw-radius);background:var(--plw-surface);}
+[data-testid="stExpander"] summary {min-height:40px;color:var(--plw-ink);}
+[data-testid="stMetric"] {padding:12px 0;border-bottom:1px solid var(--plw-line);}
 [data-testid="stMetricValue"] {font-size:1.6rem;}
-[data-testid="stButton"] button,[data-testid="stFormSubmitButton"] button {border-radius:8px;}
-.plw-brand {font-size:1.7rem;font-weight:750;letter-spacing:.05em;color:#25665c;margin-bottom:0;}
-.plw-brand-sub {font-size:.84rem;color:#63766b;margin:0 0 1.5rem;}
-.plw-eyebrow {font-size:.78rem;color:#73877b;letter-spacing:.06em;margin:0 0 .15rem;}
-.plw-empty {padding:1.2rem 0;color:#64756f;}
+[data-testid="stProgressBarTrack"]>div {background:var(--plw-accent);}
+[data-testid="stButton"] button, [data-testid="stFormSubmitButton"] button, [data-testid="stLinkButton"] a, [data-testid="stPopover"]>button {
+ font-family:var(--plw-font);border-radius:var(--plw-radius);min-height:38px;
+ border-color:var(--plw-control);color:var(--plw-ink);background:var(--plw-surface);
+ transition:background-color 120ms ease,border-color 120ms ease;touch-action:manipulation;
+}
+[data-testid="stButton"] button:hover, [data-testid="stFormSubmitButton"] button:hover, [data-testid="stLinkButton"] a:hover, [data-testid="stPopover"]>button:hover {border-color:var(--plw-accent);background:var(--plw-accent-soft);color:var(--plw-accent-ink);}
+[data-testid="stButton"] button[kind="primary"], [data-testid="stFormSubmitButton"] button[kind="primaryFormSubmit"] {background:var(--plw-accent);border-color:var(--plw-accent);color:var(--plw-accent-text);}
+[data-testid="stButton"] button[kind="primary"]:hover, [data-testid="stFormSubmitButton"] button[kind="primaryFormSubmit"]:hover {background:var(--plw-accent-hover);color:var(--plw-accent-text);}
+/* Scope every sidebar state after the generic primary hover. Never paint over
+   the text/icon with the same accent; only a neutral wash and a faint shadow. */
+[data-testid="stSidebar"] [data-testid="stButton"] button:is(:hover,:active):not(:disabled) {background:#e4eae7;color:var(--plw-ink);border-color:transparent;box-shadow:0 1px 4px #243b3510;}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"]:is(:hover,:active):not(:disabled) {box-shadow:inset 3px 0 var(--plw-accent),0 1px 4px #243b3510;}
+[data-testid="stButton"] button:disabled, [data-testid="stFormSubmitButton"] button:disabled {opacity:.5;cursor:default;}
+[data-testid="stButton"] button p, [data-testid="stFormSubmitButton"] button p {color:inherit;}
+[data-testid="stButton"] button [data-testid="stMarkdownContainer"], [data-testid="stFormSubmitButton"] button [data-testid="stMarkdownContainer"], [data-testid="stLinkButton"] a [data-testid="stMarkdownContainer"] {color:inherit;}
+[data-testid="stTextInputRootElement"], [data-testid="stNumberInputContainer"], [data-baseweb="select"]>div, [data-baseweb="textarea"] {border-radius:var(--plw-radius);}
+[data-testid="stMain"] :is(button,a,input,select,textarea,summary):focus-visible, [data-testid="stSidebar"] :is(button,a,input,summary):focus-visible {outline:2px solid var(--plw-focus);outline-offset:2px;box-shadow:none;}
+
+/* Only the most recent document has a primary CTA. */
+[class*="st-key-resume_card_"] {background:var(--plw-surface);border-top:2px solid var(--plw-line);padding:16px;border-radius:0 0 8px 8px;}
+[class*="st-key-resume_card_"] [data-testid="stVerticalBlock"] {gap:.75rem;}
+[class*="st-key-resume_card_"] [data-testid="stMarkdownContainer"] p {font-size:1rem;line-height:1.55;}
+[class*="st-key-resume_card_"] [data-testid="stMarkdownContainer"] p:has(strong) {min-height:3.1em;}
+.st-key-home_courses {gap:0;}
+.st-key-home_courses [data-testid="stButton"] button {justify-content:flex-start;text-align:left;border:0;border-bottom:1px solid var(--plw-line);border-radius:0;background:transparent;padding:10px 0;min-height:42px;}
+.st-key-home_courses [data-testid="stButton"] button>div, .st-key-home_courses [data-testid="stButton"] button [data-has-shortcut] {justify-content:flex-start;width:100%;}
+.st-key-home_courses [data-testid="stButton"] button:hover {background:var(--plw-accent-soft);}
+.st-key-home_courses>[data-testid="stVerticalBlock"]>[data-testid="stElementContainer"]:last-child {margin-top:12px;}
+
+/* Explicit overdue/important labels supplement status colors. */
 .plw-task-list {list-style:none;margin:0;padding:0;display:grid;gap:8px;}
 [data-testid="stHtml"] ol.plw-task-list {margin:0;padding:0;}
-.plw-task-row {display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:14px 16px;background:white;border:1px solid #e0e7e2;border-radius:10px;}
-.plw-task-title {font-weight:600;overflow-wrap:anywhere;line-height:1.5;}
-.plw-task-course {color:#64756f;font-size:.82rem;margin-top:3px;overflow-wrap:anywhere;}
-.plw-task-due {display:flex;align-items:flex-end;flex-direction:column;gap:5px;color:#53675e;font-size:.8rem;}
-.plw-task-priority,.plw-task-overdue {border-radius:5px;padding:3px 8px;font-size:.76rem;white-space:nowrap;}
-.plw-task-priority {background:#edf2ee;color:#53675e;}
+.plw-task-row {display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:12px 16px;background:var(--plw-surface);border:1px solid var(--plw-line);border-radius:var(--plw-radius);}
+.plw-task-title {font-weight:600;overflow-wrap:anywhere;line-height:1.55;}
+.plw-task-course {color:var(--plw-muted);font-size:.8125rem;margin-top:4px;overflow-wrap:anywhere;}
+.plw-task-due {display:flex;align-items:flex-end;flex-direction:column;gap:4px;color:var(--plw-muted);font-size:.8125rem;}
+.plw-task-priority, .plw-task-overdue {border-radius:4px;padding:3px 7px;font-size:.75rem;white-space:nowrap;}
+.plw-task-priority {background:var(--plw-sidebar);color:var(--plw-muted);}
 .plw-task-priority.is-important {background:#fff0cb;color:#805300;font-weight:600;}
-.plw-task-row.is-overdue {background:#fff4f2;border-color:#d6aaa3;border-left:4px solid #893b32;}
-.plw-task-row.is-overdue .plw-task-title,.plw-task-row.is-overdue .plw-task-due {color:#782d25;}
-.plw-task-overdue {background:#893b32;color:white;font-weight:600;}
-[class*="st-key-pending_task_"] {background:white;}
+.plw-task-row.is-overdue {background:#fff6f4;border-color:#d6aaa3;border-left:3px solid var(--plw-danger);}
+.plw-task-row.is-overdue .plw-task-title, .plw-task-row.is-overdue .plw-task-due {color:#782d25;}
+.plw-task-overdue {background:var(--plw-danger);color:white;font-weight:600;}
+[class*="st-key-pending_task_"] {background:var(--plw-surface);}
 [class*="st-key-pending_task_"] .plw-task-row {padding:0;border:0;background:transparent;}
-[class*="st-key-pending_task_"]:has(.is-overdue) {background:#fff4f2;border-color:#d6aaa3!important;border-left:4px solid #893b32!important;}
-@media(max-width:600px){.plw-task-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:12px;}.plw-task-main{grid-column:1;grid-row:1;}.plw-task-priority{grid-column:2;grid-row:1;}.plw-task-due{grid-column:1 / -1;flex-direction:row;align-items:center;flex-wrap:wrap;}}
+[class*="st-key-pending_task_"]:has(.is-overdue) {background:#fff6f4;border-color:#d6aaa3!important;border-left:3px solid var(--plw-danger)!important;}
 [data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p {font-size:0;}
 [data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p::after {content:"选择文件";font-size:14px;}
-@media(max-width:850px){[data-testid="stMainBlockContainer"]{padding:3rem 1rem;}h2{font-size:1.4rem!important;}}
+
+/* Full-width reading workspace. Never animate measured reader dimensions. */
+[data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {max-width:none;padding:1rem 1.25rem 1.5rem;}
+.st-key-shelf_workspace {gap:.5rem;}
+.st-key-shelf_workspace [data-testid="stHeading"] h2 {padding-top:0;padding-bottom:.1rem;font-size:1.375rem;}
+.st-key-shelf_workspace [data-testid="stCaptionContainer"] p {margin-bottom:0;}
+/* Streamlit offsets the paragraph's default bottom margin by -1rem on the
+   caption wrapper. When our compact shelf removes the paragraph margin, also
+   remove that compensation or the next control overlaps the visible text. */
+.st-key-shelf_workspace [data-testid="stCaptionContainer"] {margin:0;}
+.st-key-shelf_heading, .st-key-shelf_switcher {min-width:0;}
+.st-key-shelf_heading {gap:4px;}
+.st-key-shelf_heading [data-testid="stHeading"] h2 {line-height:1.4;}
+.st-key-shelf_heading [data-testid="stCaptionContainer"] p {margin:0;line-height:1.6;}
+@media(max-width:850px) {
+ [data-testid="stHeader"] {height:44px;background:var(--plw-bg);}
+ [data-testid="stMain"] {scroll-padding-top:52px;}
+ [data-testid="stMain"] :is(button,input,select,textarea,summary) {scroll-margin-top:52px;}
+ [data-testid="stMainBlockContainer"] {padding:3.25rem 1.25rem 2rem;}
+ [data-testid="stHeading"] h2 {font-size:1.5rem;}
+ [data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {padding:3.25rem .75rem 1.5rem;}
+}
+@media(max-width:600px) {
+ [data-testid="stMainBlockContainer"] {padding:3rem 1rem 2rem;}
+ .plw-task-row {grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:12px;}
+ .plw-task-main {grid-column:1;grid-row:1;}
+ .plw-task-priority {grid-column:2;grid-row:1;}
+ .plw-task-due {grid-column:1 / -1;flex-direction:row;align-items:center;flex-wrap:wrap;}
+}
+@media(pointer:coarse), (max-width:600px) {
+ [data-testid="stButton"] button, [data-testid="stFormSubmitButton"] button, [data-testid="stPopover"]>button, [data-testid="stLinkButton"] a, [data-testid="stExpander"] summary {min-height:44px;}
+ [data-testid="stMain"] input, [data-testid="stMain"] textarea {font-size:16px;}
+}
+@media(prefers-reduced-motion:reduce) {
+ [data-testid="stApp"] *, [data-testid="stApp"] *::before, [data-testid="stApp"] *::after {transition:none!important;scroll-behavior:auto!important;}
+}
+/* Decorative SVG masks do not change button names in the accessibility tree. */
+[class*="st-key-nav_item_"] button::before {content:"";display:block;flex:0 0 18px;width:18px;height:18px;margin-right:8px;background:currentColor;mask-size:contain;mask-repeat:no-repeat;}
+.st-key-nav_item_today button::before {mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='16' rx='2'/%3E%3Cpath d='M7.5 3v4M16.5 3v4M3.5 10h17M8 14h3v3H8z'/%3E%3C/svg%3E");}
+[class*="st-key-nav_item_bookshelf_"] button::before {mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5c4-.5 6.5 0 9 1.5 2.5-1.5 5-2 9-1.5v14c-4-.5-6.5 0-9 1.5-2.5-1.5-5-2-9-1.5zM12 6v14'/%3E%3C/svg%3E");}
+.st-key-nav_item_tasks button::before {mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='3.5' width='16' height='17' rx='2'/%3E%3Cpath d='m7 10 2 2 3-4M14 10h3M7 16h10'/%3E%3C/svg%3E");}
+.st-key-nav_item_notes button::before {mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8M8 15l1-4L18 2l4 4-9 9z'/%3E%3C/svg%3E");}
+[class*="st-key-nav_item_bookshelf_"] button::after {content:"";width:6px;height:6px;flex:none;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);margin-right:4px;}
+.st-key-nav_item_bookshelf_open button::after {transform:rotate(45deg);}

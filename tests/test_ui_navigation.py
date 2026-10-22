@@ -298,3 +298,16 @@ def test_removing_last_courseware_can_be_undone_with_files_and_reading_data_inta
     assert {identity: workbench.edition_state(identity) for identity in (first, second)} == progress_before
     assert {row['id']: storage.hash_file(path.parent / row['pdf_relpath']) for row in editions_before} == reading_hashes
     assert not any(item.key == 'undo_remove_' + material['id'] for item in page.button)
+
+def test_home_lists_all_active_courses_and_last_one_opens_its_shelf(root):
+    path,courses=seed(root);service=LearningService(path)
+    for title in ('机器人视觉','电机控制','人工智能','离散数学','自动控制原理'):
+        courses.append(service.create_course(courses[0]['semester_id'],title,request_id=uid()))
+    archived=service.create_course(courses[0]['semester_id'],'归档课程',request_id=uid())
+    service.set_course_archived(archived['id'],True,archived['revision'])
+    page=app()
+    buttons=[item for item in page.button if item.key and item.key.startswith('home_course_')]
+    assert [item.key.removeprefix('home_course_') for item in buttons]==[row['id'] for row in courses]
+    page.button(key='home_course_'+courses[-1]['id']).click().run()
+    assert page.session_state['navigation']=='课程书架' and page.session_state['_selected_course']==courses[-1]['id']
+    assert not page.exception and not page.error

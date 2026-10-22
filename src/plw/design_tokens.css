@@ -1,0 +1,19 @@
+/* Shared by the Streamlit shell and both component Shadow DOMs. No web fonts. */
+:root, :host {
+  --plw-font: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+  --plw-ink: #243b35;
+  --plw-muted: #53665e;
+  --plw-accent: #25665c;
+  --plw-accent-hover: #1c5149;
+  --plw-accent-ink: #1c5149;
+  --plw-accent-text: #ffffff;
+  --plw-accent-soft: #e5efeb;
+  --plw-bg: #f6f8f7;
+  --plw-surface: #ffffff;
+  --plw-sidebar: #eef3f0;
+  --plw-line: #dce5df;
+  --plw-control: #7d9187;
+  --plw-focus: #25665c;
+  --plw-danger: #963e35;
+  --plw-radius: 8px;
+}

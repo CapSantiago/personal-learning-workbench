@@ -60,10 +60,11 @@ def test_reading_and_pdf_download_survive_missing_managed_original(sample,monkey
     assert assets.download_resource('download/'+url.rsplit('/',1)[1])[0]==200
     monkeypatch.setenv('PLW_WORKSPACE',str(root))
     page=AppTest.from_string('''from pathlib import Path
-from plw.ui_workbench import read_edition
+from plw.ui_workbench import read_edition, edition_tools
 from plw.workbench import Workbench
 path=Path('''+repr(str(path))+''')
 read_edition(path,Workbench(path).rows('reading_editions')[0])
+edition_tools(path,Workbench(path).rows('reading_editions')[0])
 ''',default_timeout=30).run()
     assert not page.exception and not page.error
     assert any('原始课件暂不可下载' in item.value for item in page.caption)
