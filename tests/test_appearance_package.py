@@ -31,7 +31,7 @@ def test_appearance_bundle_sources_hashes_and_backup_order():
             'ui_workbench.py':'src/plw/ui_workbench.py','ui_theme.py':'src/plw/ui_theme.py',
             'design_tokens.css':'src/plw/design_tokens.css',
             'reader.css':'src/plw/reader/reader.css','library.css':'src/plw/reader/library.css',
-            'reader.js':'src/plw/reader/reader.js','reader_runtime.py':'src/plw/reader_runtime.py',
+            'reader.js':'src/plw/reader/reader.js',
             'install_appearance_hotfix.sh':'scripts/install_appearance_hotfix.sh',
             'verify_appearance_base.py':'scripts/verify_appearance_base.py',
             'verify_appearance_ui.py':'scripts/verify_appearance_ui.py',

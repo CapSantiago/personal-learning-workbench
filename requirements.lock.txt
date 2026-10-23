@@ -1,6 +1,8 @@
 altair==6.3.0
 anyio==4.15.1
 attrs==26.1.0
+cffi==2.1.1
+cryptography==50.0.2
 certifi==2026.7.22
 charset-normalizer==3.5.2
 click==8.5.0
@@ -22,7 +24,9 @@ pillow==12.3.0
 pluggy==1.6.0
 protobuf==7.36.2
 pyarrow==25.0.1
+pycparser==3.12
 pydeck==0.9.3
+pypdf[crypto]==6.10.0
 Pygments==2.21.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0

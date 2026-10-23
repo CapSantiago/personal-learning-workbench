@@ -20,4 +20,4 @@ jobs:
             requirements.lock.txt
             requirements-server.lock.txt
       - run: python -m pip install -r requirements-server.lock.txt
-      - run: python -B -m pytest tests/test_private_auth.py tests/test_private_assets.py tests/test_ui_theme.py -q
+      - run: python -B -m pytest tests/test_private_auth.py tests/test_private_assets.py tests/test_ui_theme.py tests/test_pdf_environment.py -q

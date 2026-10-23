@@ -36,7 +36,14 @@ def main():
         (courses[1], '自主移动机器人：定位与路径规划.pdf', [(960, 540, 0, None)] * 8),
         (courses[2], '机器人视觉与三维重建：课程介绍和完整实验说明.pdf', [(960, 540, 0, None)] * 10),
     ]):
-        material = MaterialService(database).import_upload(course['id'], name, pdf_bytes(specs), request_id=str(uuid4()))
+        body=pdf_bytes(specs)
+        if os.environ.get('PLW_DESIGN_ENCRYPTED')=='1' and index in (0,1):
+            from io import BytesIO
+            from pypdf import PdfReader,PdfWriter
+            writer=PdfWriter(clone_from=PdfReader(BytesIO(body)))
+            writer.encrypt('',owner_password='synthetic-owner-only',algorithm='AES-256' if index==0 else 'RC4-128')
+            stream=BytesIO();writer.write(stream);body=stream.getvalue()
+        material = MaterialService(database).import_upload(course['id'], name, body, request_id=str(uuid4()))
         edition = workbench.create_edition(material['id'], str(uuid4()), local_copy_confirmed=True)
         documents.append(dict(name=name, material=material['id'], edition=edition))
         if index != 1:

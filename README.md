@@ -25,7 +25,7 @@ py -3.14 -m venv .venv
 & .\.venv\Scripts\python.exe -m pip install -r requirements-server.lock.txt
 ```
 
-`requirements-server.lock.txt` 同时安装 PDF 结构检查所需的 pypdf；不会自动配置服务器。无需 Codex 或维护者的本机环境。
+`requirements-server.lock.txt` 同时安装 PDF 结构检查所需的 pypdf 和 AES 支持；不会自动配置服务器。无需 Codex 或维护者的本机环境。
 
 每次在仓库目录启动时，指定自己的数据目录与 PDF Python：
 
@@ -58,6 +58,15 @@ $env:PLW_PDF_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
 - 图形批注保存在 PLW 数据库中，当前不写回原 PDF；版本变化不自动迁移旧页批注。
 - 物理 iPad Safari/Pencil、笔压、防误触和复杂 PPT 仍有验证边界；响应式测试不等于全部设备实机认证。
 - 当前有部分维护者专用诊断、热修复脚本及历史路径记录。新部署直接使用源码，不要照抄现有服务器的热修复命令。
+
+## PDF 导入问题排查
+
+如果显示“已保存待处理”，表示原件已保存，阅读副本尚未生成，不要删除学习库。更新代码与依赖并重启后，可重新选择同名同内容文件重试导入，系统会复用已有资料。
+
+- 带权限加密标记但无需打开密码的 PDF：自动用空密码正常读取，保持原文件字节，不因加密标记一概拒绝。
+- 真正需要打开密码：先在 PDF 软件中用已知密码解锁并导出，再导入。PLW 不尝试猜测密码。
+- 缺少 pypdf/cryptography 或 PDF Python 路径无效：按具体环境提示修正；这类问题不应被误报为课件已加密。
+- 未配置 `PLW_PDF_PYTHON` 时使用启动 PLW 的当前 Python，不再依赖维护者的 Codex 路径。
 
 ## 开发与贡献
 

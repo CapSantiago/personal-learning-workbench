@@ -3,7 +3,7 @@ name = "personal-learning-workbench"
 version = "0.3.1"
 description = "Local courseware reading, annotations, tasks, Markdown notes and verified backups"
 requires-python = ">=3.14,<3.15"
-dependencies = ["streamlit==1.65.0"]
+dependencies = ["streamlit==1.65.0", "pypdf[crypto]==6.10.0"]
 
 [project.optional-dependencies]
 test = ["pytest==9.1.1"]

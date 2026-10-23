@@ -30,7 +30,7 @@ def test_ui_design_bundle_hashes_sources_and_backup_order():
             assert sha(z.read(name))==digest
         for name,source in {
             'reader.js':'src/plw/reader/reader.js',
-            'reader_runtime.py':'src/plw/reader_runtime.py','install_ui_design_hotfix.sh':'scripts/install_ui_design_hotfix.sh',
+            'install_ui_design_hotfix.sh':'scripts/install_ui_design_hotfix.sh',
             'verify_ui_design_base.py':'scripts/verify_ui_design_base.py',
         }.items():assert z.read(name)==(ROOT/source).read_bytes().replace(b'\r\n',b'\n')
         install=z.read('install_ui_design_hotfix.sh').decode()

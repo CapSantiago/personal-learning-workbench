@@ -17,7 +17,7 @@ from . import db, storage, workspace, locking
 
 PROJECT = Path(__file__).resolve().parents[2]
 ASSETS = PROJECT/'assets'/'pdfjs'
-PYTHON = Path(os.environ.get('PLW_PDF_PYTHON', str(Path.home()/'.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe') if os.name == 'nt' else sys.executable))
+PYTHON = Path(os.environ.get('PLW_PDF_PYTHON') or sys.executable)
 
 # The normal launcher installs public st.App routes before creating any reader.
 # Direct `streamlit run app.py` retains the old loopback-only transport.
@@ -128,9 +128,27 @@ def reader_routes():
 
 
 def inspect_pdf(path):
-    result=subprocess.run([str(PYTHON),'-B','-X','utf8',str(PROJECT/'scripts/pdf_metadata.py'),str(path)],capture_output=True,text=True,encoding='utf-8',timeout=45,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-    if result.returncode: raise ValueError('PDF 无法读取或已加密，请先解锁或重新导出：'+result.stderr[-500:])
-    return json.loads(result.stdout)
+    try:
+        result=subprocess.run([str(PYTHON),'-B','-X','utf8',str(PROJECT/'scripts/pdf_metadata.py'),str(path)],capture_output=True,text=True,encoding='utf-8',timeout=45,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+    except OSError as exc:
+        raise ValueError('PDF 检查程序无法启动。请检查 PLW_PDF_PYTHON 是否指向当前虚拟环境的 Python。') from exc
+    except subprocess.TimeoutExpired as exc:
+        raise ValueError('PDF 检查超过 45 秒，文件已保留；请稍后重试或检查文件复杂度。') from exc
+    if result.returncode:
+        if "No module named 'pypdf'" in result.stderr or 'No module named pypdf' in result.stderr:
+            raise ValueError('PDF 检查环境缺少 pypdf。请在运行 PLW 的虚拟环境安装 requirements-server.lock.txt，并确认 PLW_PDF_PYTHON 指向同一环境；重启后重试导入，无需删除已保存的原件。')
+        if 'cryptography' in result.stderr and ('required' in result.stderr or 'No module named' in result.stderr):
+            raise ValueError('此 PDF 使用 AES 加密，当前检查环境缺少 cryptography；请安装最新 requirements-server.lock.txt 后重启。')
+        if 'PDF 需要打开密码' in result.stderr:
+            raise ValueError('PDF 需要打开密码，请先用已知密码解锁后重新导入。')
+        raise ValueError('PDF 检查失败，不能据此判断文件已加密。详细原因：'+result.stderr[-500:])
+    try:
+        value=json.loads(result.stdout)
+        if not isinstance(value,dict) or type(value.get('pages')) is not int or not 1 <= value['pages'] <= 10000:
+            raise ValueError('invalid page count')
+    except (ValueError,TypeError) as exc:
+        raise ValueError('PDF 检查程序返回格式无效，请检查 PDF Python 环境。') from exc
+    return value
 
 
 def convert_ppt(source,target):
