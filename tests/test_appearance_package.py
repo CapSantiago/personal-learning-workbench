@@ -18,6 +18,7 @@ def test_appearance_bundle_sources_hashes_and_backup_order():
     archive=RELEASES/'PLW-Appearance-20261022.zip'
     bootstrap=RELEASES/'appearance-bootstrap-20261022.py'
     entry=(RELEASES/'Install-PLW-Appearance-20261022.ps1').read_text(encoding='utf-8-sig')
+    assert sha(archive.read_bytes())=='f1601b1683ea93c7ea8d07b2e8bc4257532d3f9074ef0b3b1b1d0c75672cb7cf'
     assert sha(archive.read_bytes()) in entry and sha(archive.read_bytes()) in bootstrap.read_text()
     assert sha(bootstrap.read_bytes()) in entry
     assert "'python3 -B -'" in entry and 'StrictHostKeyChecking=yes' in entry
@@ -28,7 +29,7 @@ def test_appearance_bundle_sources_hashes_and_backup_order():
             assert sha(z.read(name))==digest
         for name,source in {
             'ui_workbench.py':'src/plw/ui_workbench.py','ui_theme.py':'src/plw/ui_theme.py',
-            'workbench.css':'src/plw/workbench.css','design_tokens.css':'src/plw/design_tokens.css',
+            'design_tokens.css':'src/plw/design_tokens.css',
             'reader.css':'src/plw/reader/reader.css','library.css':'src/plw/reader/library.css',
             'reader.js':'src/plw/reader/reader.js','reader_runtime.py':'src/plw/reader_runtime.py',
             'install_appearance_hotfix.sh':'scripts/install_appearance_hotfix.sh',

@@ -73,6 +73,8 @@ html, body, [data-testid="stApp"] {font-family:var(--plw-font);color:var(--plw-i
 [class*="st-key-resume_card_"] [data-testid="stMarkdownContainer"] p {font-size:1rem;line-height:1.55;}
 [class*="st-key-resume_card_"] [data-testid="stMarkdownContainer"] p:has(strong) {min-height:3.1em;}
 .st-key-home_courses {gap:0;}
+.st-key-home_courses [data-testid="stHeading"] {margin-bottom:8px;}
+.st-key-home_courses [data-testid="stHeading"] [data-testid="stMarkdownContainer"] {margin-bottom:0;}
 .st-key-home_courses [data-testid="stButton"] button {justify-content:flex-start;text-align:left;border:0;border-bottom:1px solid var(--plw-line);border-radius:0;background:transparent;padding:10px 0;min-height:42px;}
 .st-key-home_courses [data-testid="stButton"] button>div, .st-key-home_courses [data-testid="stButton"] button [data-has-shortcut] {justify-content:flex-start;width:100%;}
 .st-key-home_courses [data-testid="stButton"] button:hover {background:var(--plw-accent-soft);}
@@ -98,7 +100,7 @@ html, body, [data-testid="stApp"] {font-family:var(--plw-font);color:var(--plw-i
 [data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p::after {content:"选择文件";font-size:14px;}
 
 /* Full-width reading workspace. Never animate measured reader dimensions. */
-[data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {max-width:none;padding:1rem 1.25rem 1.5rem;}
+[data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {max-width:none;padding:1rem 1.25rem var(--plw-reading-tail,1.5rem);}
 .st-key-shelf_workspace {gap:.5rem;}
 .st-key-shelf_workspace [data-testid="stHeading"] h2 {padding-top:0;padding-bottom:.1rem;font-size:1.375rem;}
 .st-key-shelf_workspace [data-testid="stCaptionContainer"] p {margin-bottom:0;}
@@ -110,13 +112,20 @@ html, body, [data-testid="stApp"] {font-family:var(--plw-font);color:var(--plw-i
 .st-key-shelf_heading {gap:4px;}
 .st-key-shelf_heading [data-testid="stHeading"] h2 {line-height:1.4;}
 .st-key-shelf_heading [data-testid="stCaptionContainer"] p {margin:0;line-height:1.6;}
+/* Reading needs room beyond the last collapsed annotation panel so the user
+   can raise the slide and toolbar in the viewport. Keep this outside the PDF
+   component: its measured height/fit calculation must not change on scroll. */
+[data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {
+ --plw-reading-tail:clamp(12rem,35vh,26rem);
+ --plw-reading-tail:clamp(12rem,35svh,26rem);
+}
 @media(max-width:850px) {
  [data-testid="stHeader"] {height:44px;background:var(--plw-bg);}
  [data-testid="stMain"] {scroll-padding-top:52px;}
  [data-testid="stMain"] :is(button,input,select,textarea,summary) {scroll-margin-top:52px;}
  [data-testid="stMainBlockContainer"] {padding:3.25rem 1.25rem 2rem;}
  [data-testid="stHeading"] h2 {font-size:1.5rem;}
- [data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {padding:3.25rem .75rem 1.5rem;}
+ [data-testid="stMainBlockContainer"]:has(.st-key-shelf_workspace) {padding:3.25rem .75rem var(--plw-reading-tail,1.5rem);}
 }
 @media(max-width:600px) {
  [data-testid="stMainBlockContainer"] {padding:3rem 1rem 2rem;}
